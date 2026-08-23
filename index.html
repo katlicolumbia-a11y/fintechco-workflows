@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08080a">
+<title>Four Workflows · Claude Code at FinTechCo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+:root{
+  --bg:#08080a; --surface:#111114; --surface-2:#17171b; --line:#26262c; --line-2:#33333b;
+  --ink:#f2f1ee; --ink-2:#a3a2a0; --ink-3:#6e6d70;
+  --accent:#d97757;
+  --red:#ef7a7a; --green:#5fd18b; --amber:#e5b25d; --blue:#6aa8ee;
+  --display:"Newsreader",Georgia,serif;
+  --sans:"IBM Plex Sans",ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+@media(max-width:640px){.wrap{padding:0 18px}}
+
+#prog{position:fixed;top:0;left:0;height:2px;width:100%;background:var(--accent);z-index:60;
+  transform:scaleX(0);transform-origin:0 50%}
+
+/* ---------- hero ---------- */
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;
+  position:relative;padding:70px 0 110px;overflow:hidden}
+#dots{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;
+  opacity:0;transition:opacity 1.6s ease}
+#dots.in{opacity:.9}
+.hero .wrap{position:relative;z-index:1;width:100%}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--accent);font-weight:500;margin:0 0 24px;display:flex;align-items:center;gap:11px}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--accent)}
+h1{font-family:var(--display);font-size:clamp(38px,7vw,80px);line-height:1.03;margin:0 0 22px;
+  font-weight:300;letter-spacing:-.025em;max-width:16ch;text-wrap:balance;visibility:hidden}
+h1 em{font-style:italic;color:var(--accent)}
+.lede{font-size:clamp(16px,2vw,19px);color:var(--ink-2);max-width:54ch;margin:0;line-height:1.6}
+.line{overflow:hidden;display:block;padding-bottom:.09em}
+.word{display:inline-block}
+.jump{display:flex;flex-wrap:wrap;gap:9px;margin-top:36px}
+.jump a{font-family:var(--mono);font-size:11.5px;padding:9px 15px;border:1px solid var(--line);
+  border-radius:99px;color:var(--ink-2);text-decoration:none;background:var(--surface);
+  transition:border-color .25s,color .25s;display:flex;align-items:center;gap:9px}
+.jump a:hover{color:var(--ink);border-color:var(--accent)}
+.jump a i{font-family:var(--mono);font-style:normal;font-size:10px;color:var(--accent)}
+.cue{position:absolute;left:0;right:0;bottom:34px;text-align:center;font-family:var(--mono);
+  font-size:10.5px;letter-spacing:.2em;color:var(--ink-3);text-transform:uppercase;opacity:0}
+.cue span{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(7px);opacity:1}}
+
+/* ---------- scenes ---------- */
+.scene{padding:110px 0;border-top:1px solid var(--line);position:relative}
+.shead{display:flex;gap:20px;align-items:baseline;margin-bottom:8px}
+.snum{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.14em;
+  padding-top:9px;flex:none}
+h2{font-family:var(--display);font-size:clamp(27px,4vw,42px);margin:0;font-weight:300;
+  letter-spacing:-.02em;text-wrap:balance;max-width:18ch;visibility:hidden}
+.cap{font-size:16px;color:var(--ink-2);margin:0 0 34px 51px;max-width:52ch}
+@media(max-width:640px){.cap{margin-left:0}.shead{gap:13px}}
+
+/* ---------- chat box ---------- */
+.chat{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  margin-left:51px}
+@media(max-width:640px){.chat{margin-left:0}}
+.chat .bar{display:flex;align-items:center;gap:9px;padding:11px 16px;border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.08em}
+.chat .bar i{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none;display:block}
+.msg{padding:17px 20px;display:flex;gap:14px;align-items:flex-start}
+.msg + .msg{border-top:1px solid var(--line)}
+.who{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);flex:none;width:52px;padding-top:4px}
+.msg.you .who{color:var(--ink-2)}
+.msg.ai .who{color:var(--accent)}
+.bubble{font-family:var(--mono);font-size:13.5px;line-height:1.65;color:var(--ink);min-height:1.2em;
+  flex:1;min-width:0}
+.cur{display:inline-block;width:7px;height:14px;background:var(--accent);vertical-align:-2px;
+  animation:blink 1.05s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.think{display:inline-flex;gap:5px;align-items:center;color:var(--ink-3);font-size:12.5px}
+.think b{width:5px;height:5px;border-radius:50%;background:var(--ink-3);display:block;
+  animation:pulse 1.3s ease-in-out infinite}
+.think b:nth-child(2){animation-delay:.18s} .think b:nth-child(3){animation-delay:.36s}
+@keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* ---------- code + terminal ---------- */
+.code{font-family:var(--mono);font-size:12.5px;line-height:1.85;background:#000;
+  border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;margin-top:12px}
+.code .ln{display:block;white-space:pre;opacity:0}
+.code .fn{color:var(--ink-3)}
+.code .del{color:var(--red)} .code .add{color:var(--green)}
+.code .cm{color:var(--ink-3)}
+.term{font-family:var(--mono);font-size:12.5px;line-height:1.9;background:#000;
+  border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;margin-top:12px}
+.term .ln{display:block;white-space:pre;opacity:0}
+.term .ps{color:var(--accent)}
+.term .ok{color:var(--green)} .term .bad{color:var(--red)} .term .dim{color:var(--ink-3)}
+
+/* ---------- outcome strip ---------- */
+.out{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;
+  margin:16px 0 0 51px}
+@media(max-width:640px){.out{margin-left:0}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:19px 21px;
+  opacity:0}
+.stat .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.stat .k i{width:7px;height:7px;border-radius:2px;flex:none;display:block}
+.stat .v{font-family:var(--display);font-size:40px;font-weight:300;line-height:1;
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.stat .s{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);margin-top:9px}
+.stat.good .v{color:var(--green)} .stat.bad .v{color:var(--red)}
+
+/* ---------- svg figures ---------- */
+.fig{margin:18px 0 0 51px;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:20px 22px;overflow-x:auto}
+@media(max-width:640px){.fig{margin-left:0;padding:14px}}
+.fig svg{display:block;width:100%;height:auto}
+.fig text{font-family:var(--mono)}
+.figcap{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-top:12px;letter-spacing:.03em}
+
+footer{padding:60px 0 80px;border-top:1px solid var(--line);font-family:var(--mono);
+  font-size:12px;color:var(--ink-3);line-height:1.9}
+footer a{color:var(--accent);text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  h1,h2{visibility:visible!important}
+  .cue{opacity:1}
+  .code .ln,.term .ln,.stat{opacity:1!important}
+  .cur,.think b,.cue span{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<div class="hero">
+  <canvas id="dots" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <p class="eyebrow">Claude Code · common workflows</p>
+    <h1>Four things your engineers do <em>all day</em></h1>
+    <p class="lede">Understand unfamiliar code. Fix a bug. Add a feature. Refactor safely.
+      Each one below runs against FinTechCo's real payments service — and plays itself.</p>
+    <nav class="jump">
+      <a href="#w1"><i>01</i> Understand</a>
+      <a href="#w2"><i>02</i> Fix a bug</a>
+      <a href="#w3"><i>03</i> Add a feature</a>
+      <a href="#w4"><i>04</i> Refactor</a>
+    </nav>
+  </div>
+  <div class="cue"><span>Scroll ▼</span></div>
+</div>
+
+<!-- ══════ 01 UNDERSTAND ══════ -->
+<section class="scene" id="w1">
+  <div class="wrap">
+    <div class="shead"><span class="snum">01</span><h2>You inherited it on a Tuesday</h2></div>
+    <p class="cap">No docs. The author left in November. Ask it what the code does.</p>
+
+    <div class="chat" data-scene="s1">
+      <div class="bar"><i></i>claude · ~/fintechco-payments</div>
+      <div class="msg you"><span class="who">You</span>
+        <div class="bubble" data-type="give me an overview — where does money actually move?"></div></div>
+      <div class="msg ai"><span class="who">Claude</span>
+        <div class="bubble" data-reply>
+          <div class="think" data-think><b></b><b></b><b></b> reading 5 files…</div>
+        </div></div>
+    </div>
+
+    <div class="fig" data-fig="s1">
+      <svg viewBox="0 0 900 250" role="img" aria-label="Money flow through the settlement service"></svg>
+      <div class="figcap" data-figcap style="opacity:0">The money path, reconstructed from source — not from a wiki.</div>
+    </div>
+
+    <div class="out" data-out="s1">
+      <div class="stat"><div class="k"><i style="background:var(--blue)"></i>Modules mapped</div>
+        <div class="v" data-to="5">0</div><div class="s">app/ — 234 lines of Python</div></div>
+      <div class="stat"><div class="k"><i style="background:var(--accent)"></i>House rules found</div>
+        <div class="v" data-to="4">0</div><div class="s">read from CLAUDE.md</div></div>
+      <div class="stat"><div class="k"><i style="background:var(--amber)"></i>Stale note</div>
+        <div class="v" data-txt="2024-11">—</div><div class="s">"mirrors the old PHP job"</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ 02 FIX ══════ -->
+<section class="scene" id="w2">
+  <div class="wrap">
+    <div class="shead"><span class="snum">02</span><h2>Green tests. Books don't balance.</h2></div>
+    <p class="cap">Every test passes. Finance still can't close the day.</p>
+
+    <div class="chat" data-scene="s2">
+      <div class="bar"><i></i>claude · fix the reconciliation</div>
+      <div class="msg you"><span class="who">You</span>
+        <div class="bubble" data-type="pytest passes but reconcile.py is off by $0.09. why?"></div></div>
+      <div class="msg ai"><span class="who">Claude</span>
+        <div class="bubble" data-reply>
+          <div class="think" data-think><b></b><b></b><b></b> comparing fee logic…</div>
+        </div></div>
+    </div>
+
+    <div class="fig" data-term="s2a" style="padding:0;border:0;background:none;margin-top:14px">
+      <div class="term">
+        <span class="ln"><span class="ps">$</span> python -m pytest -q</span>
+        <span class="ln"><span class="ok">........                    8 passed</span></span>
+        <span class="ln"> </span>
+        <span class="ln"><span class="ps">$</span> python scripts/reconcile.py</span>
+        <span class="ln"><span class="dim">Payments settled:        185</span></span>
+        <span class="ln"><span class="bad">MISMATCH ✘  fee drift: $-0.09</span></span>
+      </div>
+    </div>
+
+    <div class="fig" data-code="s2b" style="padding:0;border:0;background:none;margin-top:14px">
+      <div class="code">
+        <span class="ln fn"># app/fees.py</span>
+        <span class="ln del">- PLATFORM_FEE_RATE = 0.025            # float</span>
+        <span class="ln add">+ PLATFORM_FEE_RATE = Decimal("0.025")  # matches ledger.py</span>
+        <span class="ln"> </span>
+        <span class="ln cm"># …but fees.py alone raises TypeError — settlement accumulates floats</span>
+        <span class="ln fn"># app/settlement.py</span>
+        <span class="ln del">-     gross = 0.0</span>
+        <span class="ln add">+     gross = Decimal("0")</span>
+        <span class="ln"> </span>
+        <span class="ln fn"># tests/test_fees.py</span>
+        <span class="ln add">+ def test_fee_matches_ledger_exactly():</span>
+        <span class="ln add">+     assert fees.platform_fee(D("10.20")) == ledger.fee_entry(D("10.20"))</span>
+      </div>
+    </div>
+
+    <div class="fig" data-term="s2c" style="padding:0;border:0;background:none;margin-top:14px">
+      <div class="term">
+        <span class="ln"><span class="ps">$</span> python -m pytest -q</span>
+        <span class="ln"><span class="ok">.........                   9 passed</span></span>
+        <span class="ln"><span class="ps">$</span> python scripts/reconcile.py</span>
+        <span class="ln"><span class="ok">RECONCILED ✔  settlement matches the ledger</span></span>
+      </div>
+    </div>
+
+    <div class="out" data-out="s2">
+      <div class="stat bad"><div class="k"><i style="background:var(--red)"></i>Drift before</div>
+        <div class="v" data-to="0.09" data-pre="$" data-dp="2">0</div><div class="s">across 185 payments</div></div>
+      <div class="stat good"><div class="k"><i style="background:var(--green)"></i>Drift after</div>
+        <div class="v" data-txt="$0.00">—</div><div class="s">reconcile.py exits 0</div></div>
+      <div class="stat"><div class="k"><i style="background:var(--accent)"></i>Regression test</div>
+        <div class="v" data-txt="+1">—</div><div class="s">the next float gets caught</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ 03 ADD ══════ -->
+<section class="scene" id="w3">
+  <div class="wrap">
+    <div class="shead"><span class="snum">03</span><h2>The gap nobody has hit yet</h2></div>
+    <p class="cap">The converter exists. The field exists. Nothing connects them.</p>
+
+    <div class="chat" data-scene="s3">
+      <div class="bar"><i></i>claude · multi-currency settlement</div>
+      <div class="msg you"><span class="who">You</span>
+        <div class="bubble" data-type="does settlement use fx.py? what happens on a EUR payment?"></div></div>
+      <div class="msg ai"><span class="who">Claude</span>
+        <div class="bubble" data-reply>
+          <div class="think" data-think><b></b><b></b><b></b> tracing currency…</div>
+        </div></div>
+    </div>
+
+    <div class="fig" data-fig="s3">
+      <svg viewBox="0 0 900 210" role="img" aria-label="Currency is read then discarded before settlement"></svg>
+      <div class="figcap" data-figcap style="opacity:0">Currency is read on every row — then dropped before the total.</div>
+    </div>
+
+    <div class="fig" data-bars="s3b">
+      <svg viewBox="0 0 900 180" role="img" aria-label="A 100 euro payment booked at 100 dollars versus 108.42"></svg>
+      <div class="figcap" data-figcap style="opacity:0">A €100 payment, as booked today vs. converted correctly at 1.0842.</div>
+    </div>
+
+    <div class="out" data-out="s3">
+      <div class="stat"><div class="k"><i style="background:var(--amber)"></i>Today's data</div>
+        <div class="v" data-txt="200/200">—</div><div class="s">all USD — so it's invisible</div></div>
+      <div class="stat bad"><div class="k"><i style="background:var(--red)"></i>Error per €100</div>
+        <div class="v" data-to="8.42" data-pre="$" data-dp="2">0</div><div class="s">understated on a bank report</div></div>
+      <div class="stat"><div class="k"><i style="background:var(--blue)"></i>Caught by</div>
+        <div class="v" data-txt="0">—</div><div class="s">tests · CI · reconciliation</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ 04 REFACTOR ══════ -->
+<section class="scene" id="w4">
+  <div class="wrap">
+    <div class="shead"><span class="snum">04</span><h2>Pay down the note someone left you</h2></div>
+    <p class="cap">Same behaviour. Fewer ways to get it wrong.</p>
+
+    <div class="chat" data-scene="s4">
+      <div class="bar"><i></i>claude · refactor settlement.py</div>
+      <div class="msg you"><span class="who">You</span>
+        <div class="bubble" data-type="clean this up to match CLAUDE.md — don't change behaviour"></div></div>
+      <div class="msg ai"><span class="who">Claude</span>
+        <div class="bubble" data-reply>
+          <div class="think" data-think><b></b><b></b><b></b> planning 4 steps…</div>
+        </div></div>
+    </div>
+
+    <div class="fig" data-code="s4b" style="padding:0;border:0;background:none;margin-top:14px">
+      <div class="code">
+        <span class="ln fn"># app/settlement.py</span>
+        <span class="ln del">- NOTE(jchen, 2024-11): mirrors the old PHP job. Clean up later.</span>
+        <span class="ln"> </span>
+        <span class="ln del">-     gross += float(p.amount)</span>
+        <span class="ln del">-     total_fees += fees.platform_fee(p.amount)</span>
+        <span class="ln add">+     gross += fx.to_usd(p.amount, p.currency)</span>
+        <span class="ln add">+     total_fees += ledger.fee_entry(gross_usd)   # one source of truth</span>
+      </div>
+    </div>
+
+    <div class="fig" data-term="s4c" style="padding:0;border:0;background:none;margin-top:14px">
+      <div class="term">
+        <span class="ln"><span class="dim">step 1/4  Decimal throughout</span>          <span class="ok">✔ 9 passed</span></span>
+        <span class="ln"><span class="dim">step 2/4  single fee-rate definition</span>  <span class="ok">✔ 9 passed</span></span>
+        <span class="ln"><span class="dim">step 3/4  route currency via fx</span>       <span class="ok">✔ tests green</span></span>
+        <span class="ln"><span class="dim">step 4/4  replace the stale note</span>      <span class="ok">✔ RECONCILED</span></span>
+      </div>
+    </div>
+
+    <div class="out" data-out="s4">
+      <div class="stat good"><div class="k"><i style="background:var(--green)"></i>Fee rate defined</div>
+        <div class="v" data-txt="2 → 1">—</div><div class="s">one source of truth</div></div>
+      <div class="stat good"><div class="k"><i style="background:var(--green)"></i>Money types</div>
+        <div class="v" data-txt="Decimal">—</div><div class="s">float eliminated</div></div>
+      <div class="stat good"><div class="k"><i style="background:var(--green)"></i>Behaviour</div>
+        <div class="v" data-txt="held">—</div><div class="s">verified every step</div></div>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap">
+  Runs against <a href="https://github.com/katlicolumbia-a11y/fintechco-payments" target="_blank" rel="noopener">fintechco-payments</a>
+  — a real settlement service with the bug and the currency gap left in.<br>
+  Data-science and SRE workflows: <a href="https://katlicolumbia-a11y.github.io/phillips-curve-monitor/" target="_blank" rel="noopener">phillips-curve-monitor</a>.<br>
+  FinTechCo is fictional; the payments data is synthetic. Every figure shown is measured from the repo.
+</div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script src="https://unpkg.com/split-type@0.3.4/umd/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const COARSE=matchMedia('(pointer: coarse)').matches;
+const NS='http://www.w3.org/2000/svg';
+const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+if(!RM&&window.gsap&&window.ScrollTrigger){
+  gsap.registerPlugin(ScrollTrigger);
+  const lenis=new Lenis({duration:1.1});
+  lenis.on('scroll',ScrollTrigger.update);
+  gsap.ticker.add(t=>lenis.raf(t*1000));
+  gsap.ticker.lagSmoothing(0);
+  document.fonts.ready.then(()=>ScrollTrigger.refresh());
+  gsap.to('#prog',{scaleX:1,ease:'none',
+    scrollTrigger:{trigger:document.documentElement,start:'top top',end:'bottom bottom',scrub:.3}});
+}
+
+/* masked heading reveals */
+function mask(node,opts){
+  const o=opts||{};
+  if(RM||!window.SplitType||!window.gsap){node.style.visibility='visible';return;}
+  const sp=new SplitType(node,{types:'lines,words',lineClass:'line',wordClass:'word'});
+  gsap.set(node,{visibility:'visible'});
+  if(!sp.words||!sp.words.length)return;
+  gsap.fromTo(sp.words,{yPercent:112},{yPercent:0,duration:.9,ease:'power4.out',stagger:.045,
+    delay:o.delay||0,scrollTrigger:o.scroll?{trigger:node,start:'top 88%',once:true}:undefined});
+}
+mask($('h1'),{delay:.15});
+$$('h2').forEach(n=>mask(n,{scroll:true}));
+if(!RM&&window.gsap){
+  gsap.fromTo('.jump a',{opacity:0,y:14},{opacity:1,y:0,duration:.6,ease:'power3.out',stagger:.06,delay:.8});
+  gsap.fromTo('.cue',{opacity:0},{opacity:1,duration:.9,delay:1.6});
+  gsap.utils.toArray('.cap').forEach(n=>gsap.fromTo(n,{opacity:0,y:18},{opacity:1,y:0,duration:.7,
+    ease:'power3.out',scrollTrigger:{trigger:n,start:'top 88%',once:true}}));
+  gsap.utils.toArray('.chat').forEach(n=>gsap.fromTo(n,{opacity:0,y:26,scale:.99},
+    {opacity:1,y:0,scale:1,duration:.8,ease:'power3.out',
+     scrollTrigger:{trigger:n,start:'top 85%',once:true}}));
+}else{$('.cue').style.opacity=1;}
+
+/* ---------- scene player ---------- */
+function typeInto(node,text,speed){
+  return new Promise(res=>{
+    if(RM){node.textContent=text;res();return;}
+    node.innerHTML='<span class="t"></span><span class="cur"></span>';
+    const t=node.querySelector('.t');let i=0;
+    (function tick(){t.textContent=text.slice(0,++i);
+      if(i<text.length)setTimeout(tick,speed||26);
+      else{node.querySelector('.cur').remove();res();}})();
+  });
+}
+function revealLines(host,stagger){
+  return new Promise(res=>{
+    const lns=[...host.querySelectorAll('.ln')];
+    if(RM||!window.gsap){lns.forEach(l=>l.style.opacity=1);res();return;}
+    gsap.to(lns,{opacity:1,duration:.16,stagger:stagger||.13,ease:'none',onComplete:res});
+  });
+}
+function countUp(host){
+  host.querySelectorAll('.stat').forEach((s,i)=>{
+    if(RM||!window.gsap){s.style.opacity=1;
+      const v=s.querySelector('.v');if(v.dataset.to)v.textContent=(v.dataset.pre||'')+(+v.dataset.to).toFixed(+v.dataset.dp||0);
+      if(v.dataset.txt)v.textContent=v.dataset.txt;return;}
+    gsap.to(s,{opacity:1,duration:.5,delay:i*.09,ease:'power2.out'});
+    const v=s.querySelector('.v');
+    if(v.dataset.txt){gsap.delayedCall(i*.09+.15,()=>v.textContent=v.dataset.txt);return;}
+    const to=+v.dataset.to,dp=+v.dataset.dp||0,pre=v.dataset.pre||'';
+    const o={n:0};
+    gsap.to(o,{n:to,duration:1.1,delay:i*.09,ease:'power2.out',
+      onUpdate:()=>v.textContent=pre+o.n.toFixed(dp)});
+  });
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,RM?0:ms));}
+
+/* replies, written out rather than pasted */
+const REPLIES={
+  s1:'Five modules. A CSV loads into Payment records, then splits two ways —\na bank-facing settlement report and a double-entry ledger.\nreconcile.py compares them nightly.\n\nCLAUDE.md sets the house rules: Decimal never float, ROUND_HALF_UP\nat 2dp, a regression test per behaviour change, reconcile must exit 0.',
+  s2:'Two implementations of one rule.\n\nfees.py computes the 2.5% fee in float. ledger.py computes the same\nfee in Decimal with ROUND_HALF_UP. On half-cent boundaries they round\ndifferently — and it compounds across the batch.\n\nThis also contradicts CLAUDE.md, which the repo already states.',
+  s3:'No — it does not.\n\nsettlement_totals() sums float(p.amount) and never calls fx.to_usd.\nCurrency is read off every row, then discarded.\n\nA €100 payment is booked into the bank report as $100.\nAll 200 rows are USD today, so nothing fails.',
+  s4:'Four steps, tests between each:\n\n1. Decimal end to end\n2. collapse the duplicated fee rate to one definition\n3. route currency through fx.to_usd\n4. replace the stale NOTE with what it does now\n\nreconcile.py stays the oracle — it must exit 0 at every step.',
+};
+
+async function playScene(key){
+  const chat=document.querySelector(`[data-scene="${key}"]`);
+  if(chat){
+    const you=chat.querySelector('[data-type]');
+    await typeInto(you,you.dataset.type,28);
+    await sleep(320);
+    const reply=chat.querySelector('[data-reply]');
+    await sleep(900);                       /* let the thinking dots breathe */
+    reply.innerHTML='';
+    await typeInto(reply,REPLIES[key]||'',9);
+    await sleep(260);
+  }
+  /* then whatever visual belongs to this scene, in document order */
+  const rest=[...document.querySelectorAll(
+    `[data-term^="${key}"],[data-code^="${key}"],[data-fig="${key}"],[data-bars="${key}"],[data-out="${key}"]`)];
+  for(const node of rest){
+    if(node.hasAttribute('data-out')){countUp(node);await sleep(500);continue;}
+    if(node.hasAttribute('data-fig')){drawFig(key,node);await sleep(650);continue;}
+    if(node.hasAttribute('data-bars')){drawBars(node);await sleep(650);continue;}
+    await revealLines(node, node.hasAttribute('data-code')?.14:.16);
+    await sleep(340);
+  }
+}
+
+/* ---------- figures ---------- */
+function drawFig(key,host){
+  const svg=host.querySelector('svg');svg.innerHTML='';
+  const cap=host.querySelector('[data-figcap]');
+  const box=(x,y,w,h,label,sub,tone)=>{
+    const g=el('g',{opacity:0});
+    g.appendChild(el('rect',{x,y,width:w,height:h,rx:9,fill:'var(--surface-2)',
+      stroke:tone||'var(--line-2)','stroke-width':1.4}));
+    const t=el('text',{x:x+w/2,y:y+(sub?h/2-4:h/2+5),'text-anchor':'middle',
+      fill:'var(--ink)','font-size':13});
+    t.textContent=label;g.appendChild(t);
+    if(sub){const s=el('text',{x:x+w/2,y:y+h/2+15,'text-anchor':'middle',
+      fill:'var(--ink-3)','font-size':10.5});s.textContent=sub;g.appendChild(s);}
+    svg.appendChild(g);return g;
+  };
+  const arrow=(x1,y1,x2,y2,tone,dash)=>{
+    const p=el('path',{d:`M${x1} ${y1} L${x2} ${y2}`,stroke:tone||'var(--ink-3)','stroke-width':1.6,
+      fill:'none','marker-end':'url(#ah)',...(dash?{'stroke-dasharray':'4 4'}:{})});
+    svg.appendChild(p);return p;
+  };
+  const defs=el('defs');
+  const mk=el('marker',{id:'ah',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto'});
+  mk.appendChild(el('path',{d:'M0 0 L10 5 L0 10 z',fill:'var(--ink-3)'}));
+  defs.appendChild(mk);svg.appendChild(defs);
+
+  let nodes=[],arrows=[];
+  if(key==='s1'){
+    nodes=[box(20,95,150,62,'transactions','.csv'),
+           box(215,95,150,62,'Payment','models.py'),
+           box(410,25,150,62,'settlement','report'),
+           box(410,163,150,62,'Ledger','double-entry'),
+           box(620,95,240,62,'reconcile.py','compares both nightly','var(--accent)')];
+    arrows=[arrow(170,126,213,126),arrow(365,120,408,72),arrow(365,132,408,180),
+            arrow(560,60,660,105),arrow(560,190,660,145)];
+  }else{
+    nodes=[box(20,72,160,62,'currency','read per row','var(--green)'),
+           box(240,72,180,62,'load_payments()','keeps the field'),
+           box(480,72,180,62,'settlement_totals()','drops it','var(--red)'),
+           box(720,72,150,62,'fx.to_usd()','never called','var(--red)')];
+    arrows=[arrow(180,103,238,103,'var(--green)'),arrow(420,103,478,103),
+            arrow(660,103,718,103,'var(--red)',true)];
+    const x=el('text',{x:689,y:150,'text-anchor':'middle',fill:'var(--red)','font-size':20,opacity:0});
+    x.textContent='✕';svg.appendChild(x);nodes.push(x);
+  }
+  if(RM||!window.gsap){nodes.forEach(n=>n.setAttribute('opacity',1));if(cap)cap.style.opacity=1;return;}
+  arrows.forEach(a=>{const L=a.getTotalLength();
+    a.style.strokeDasharray=a.getAttribute('stroke-dasharray')||L;
+    if(!a.getAttribute('stroke-dasharray'))a.style.strokeDashoffset=L;});
+  gsap.to(nodes,{opacity:1,duration:.45,stagger:.14,ease:'power2.out'});
+  arrows.forEach((a,i)=>{if(a.getAttribute('stroke-dasharray'))return;
+    gsap.to(a,{strokeDashoffset:0,duration:.5,delay:.28+i*.14,ease:'power2.inOut'});});
+  if(cap)gsap.to(cap,{opacity:1,duration:.5,delay:.9});
+}
+
+function drawBars(host){
+  const svg=host.querySelector('svg');svg.innerHTML='';
+  const cap=host.querySelector('[data-figcap]');
+  const rows=[['booked today',100,'var(--red)','$100.00'],
+              ['correct at 1.0842',108.42,'var(--green)','$108.42']];
+  const x0=190,w=620,max=120;
+  rows.forEach(([label,val,tone,txt],i)=>{
+    const y=32+i*68;
+    const l=el('text',{x:x0-16,y:y+22,'text-anchor':'end',fill:'var(--ink-2)','font-size':12});
+    l.textContent=label;svg.appendChild(l);
+    svg.appendChild(el('rect',{x:x0,y,width:w,height:34,rx:6,fill:'var(--surface-2)'}));
+    const bar=el('rect',{x:x0,y,width:0,height:34,rx:6,fill:tone,opacity:.75});
+    svg.appendChild(bar);
+    const v=el('text',{x:x0+10,y:y+22,fill:'var(--ink)','font-size':13,opacity:0});
+    v.textContent=txt;svg.appendChild(v);
+    if(RM||!window.gsap){bar.setAttribute('width',w*val/max);v.setAttribute('opacity',1);return;}
+    gsap.to(bar,{attr:{width:w*val/max},duration:1.1,delay:i*.22,ease:'power3.out'});
+    gsap.to(v,{opacity:1,duration:.4,delay:i*.22+.5});
+  });
+  if(RM||!window.gsap){if(cap)cap.style.opacity=1;return;}
+  if(cap)gsap.to(cap,{opacity:1,duration:.5,delay:1.2});
+}
+
+/* fire each scene once, when it arrives */
+['s1','s2','s3','s4'].forEach((key,i)=>{
+  const anchor=document.querySelector(`#w${i+1}`);
+  if(RM||!window.ScrollTrigger){playScene(key);return;}
+  ScrollTrigger.create({trigger:anchor,start:'top 62%',once:true,onEnter:()=>playScene(key)});
+});
+
+/* ---------- hero dot field ---------- */
+(function dots(){
+  const cv=$('#dots');if(!cv||!cv.getContext)return;
+  const ctx=cv.getContext('2d'),DPR=Math.min(devicePixelRatio||1,2);
+  let w=0,h=0,pts=[],raf=0,run=false,t=0;
+  const m={x:.5,y:.5,tx:.5,ty:.5};
+  const sprite=rgb=>{const s=64,c=document.createElement('canvas');c.width=c.height=s;
+    const g=c.getContext('2d'),gr=g.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+    gr.addColorStop(0,`rgba(${rgb},1)`);gr.addColorStop(.35,`rgba(${rgb},.5)`);
+    gr.addColorStop(1,`rgba(${rgb},0)`);g.fillStyle=gr;g.fillRect(0,0,s,s);return c;};
+  const A=sprite('242,241,238'),B=sprite('217,119,87'),C=sprite('106,168,238');
+  function build(){
+    const r=cv.getBoundingClientRect();w=Math.max(1,r.width);h=Math.max(1,r.height);
+    cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);
+    const target=Math.min(w<700?240:820,Math.round(w*h/2800)),gap=Math.sqrt(w*h/target);
+    pts=[];
+    for(let y=gap*.5;y<h;y+=gap)for(let x=gap*.5;x<w;x+=gap){
+      const r2=Math.random();
+      pts.push({x:x+(Math.random()-.5)*gap*.85,y:y+(Math.random()-.5)*gap*.85,
+        base:.10+Math.random()*.30,size:1.4+Math.random()*2.6,ph:Math.random()*6.28,
+        sp:.4+Math.random()*1.1,depth:.4+Math.random()*.9,
+        sp2:r2<.05?B:(r2<.11?C:A),flare:0});
+    }
+  }
+  function frame(dt){
+    t+=dt;m.x+=(m.tx-m.x)*.05;m.y+=(m.ty-m.y)*.05;
+    const mx=(m.x-.5)*26,my=(m.y-.5)*20;
+    ctx.clearRect(0,0,w,h);ctx.globalCompositeOperation='lighter';
+    for(const d of pts){
+      if(d.flare>0)d.flare-=dt*1.6;else if(Math.random()<.00035)d.flare=1;
+      const tw=.55+.45*Math.sin(t*d.sp+d.ph);
+      ctx.globalAlpha=Math.min(1,d.base*tw+Math.max(0,d.flare)*.85);
+      const sz=(d.size+Math.max(0,d.flare)*3.4)*4;
+      ctx.drawImage(d.sp2,d.x+mx*d.depth-sz/2,d.y+my*d.depth-sz/2,sz,sz);
+    }
+    ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+    const vg=ctx.createRadialGradient(w*.5,h*.5,Math.min(w,h)*.35,w*.5,h*.5,Math.max(w,h)*.85);
+    vg.addColorStop(0,'rgba(8,8,10,0)');vg.addColorStop(1,'rgba(8,8,10,.65)');
+    ctx.fillStyle=vg;ctx.fillRect(0,0,w,h);
+  }
+  let last=0;
+  function loop(now){if(!run)return;const dt=Math.min(.05,(now-last)/1000||.016);last=now;
+    frame(dt);raf=requestAnimationFrame(loop);}
+  build();requestAnimationFrame(()=>cv.classList.add('in'));
+  if(RM){frame(0);return;}
+  addEventListener('resize',()=>{build();if(!run)frame(0)},{passive:true});
+  addEventListener('mousemove',e=>{m.tx=e.clientX/innerWidth;m.ty=e.clientY/innerHeight},{passive:true});
+  new IntersectionObserver(es=>{if(es[0].isIntersecting){run=true;last=performance.now();
+    raf=requestAnimationFrame(loop);}else{run=false;cancelAnimationFrame(raf);}},{threshold:0}).observe(cv);
+})();
+</script>
+</body>
+</html>
