@@ -63,37 +63,61 @@ h2{font-family:var(--display);font-size:clamp(27px,4vw,42px);margin:0;font-weigh
 .cap{font-size:16px;color:var(--ink-2);margin:0 0 34px 51px;max-width:52ch}
 @media(max-width:640px){.cap{margin-left:0}.shead{gap:13px}}
 
-/* ---------- chat box ---------- */
-.chat{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
-  margin-left:51px}
-@media(max-width:640px){.chat{margin-left:0}}
-.chat .bar{display:flex;align-items:center;gap:9px;padding:11px 16px;border-bottom:1px solid var(--line);
-  font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.08em}
-.chat .bar i{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none;display:block}
-.msg{padding:17px 20px;display:flex;gap:14px;align-items:flex-start}
-.msg + .msg{border-top:1px solid var(--line)}
-.who{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--ink-3);flex:none;width:52px;padding-top:4px}
-.msg.you .who{color:var(--ink-2)}
-.msg.ai .who{color:var(--accent)}
-.bubble{font-family:var(--mono);font-size:13.5px;line-height:1.65;color:var(--ink);min-height:1.2em;
-  flex:1;min-width:0}
+/* ---------- claude mark ---------- */
+.clogo{width:1em;height:1em;flex:none;color:var(--accent);display:inline-block;vertical-align:-.14em}
+.clogo.spin{animation:spin 3.4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- claude code CLI ---------- */
+.cli{background:#0a0a0c;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  margin-left:51px;font-family:var(--mono);font-size:13px;line-height:1.75}
+@media(max-width:640px){.cli{margin-left:0;font-size:11.5px}}
+.cli .chrome{display:flex;align-items:center;gap:8px;padding:10px 14px;
+  border-bottom:1px solid var(--line);background:var(--surface)}
+.cli .chrome .dot{width:10px;height:10px;border-radius:50%;display:block;flex:none}
+.cli .chrome .path{margin-left:8px;font-size:10.5px;color:var(--ink-3);letter-spacing:.05em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cli .body{padding:16px 16px 18px;min-height:150px}
+
+/* input box, the rounded prompt frame */
+.inbox{border:1px solid var(--line-2);border-radius:9px;padding:9px 12px;display:flex;gap:9px;
+  align-items:flex-start;color:var(--ink);background:#0e0e11}
+.inbox .car{color:var(--accent);flex:none}
+.inbox .txt{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word}
+
+/* streaming status line */
+.status{display:flex;align-items:center;gap:9px;color:var(--ink-3);font-size:12.5px;
+  margin-top:13px;opacity:0}
+.status .el{color:var(--ink-3)}
+
+/* tool call lines */
+.tool{margin-top:11px;opacity:0}
+.tool .call{color:var(--ink);display:flex;gap:9px;align-items:baseline}
+.tool .call .b{color:var(--accent);flex:none}
+.tool .call .fnname{color:var(--ink)}
+.tool .call .args{color:var(--blue)}
+.tool .res{color:var(--ink-3);padding-left:22px;font-size:12.5px}
+.tool .res .ok{color:var(--green)}
+.tool .res .bad{color:var(--red)}
+
+/* final answer */
+.answer{margin-top:15px;display:flex;gap:9px;align-items:flex-start;opacity:0}
+.answer .b{color:var(--accent);flex:none;padding-top:1px}
+.answer .txt{flex:1;min-width:0;white-space:pre-wrap;color:var(--ink);line-height:1.72}
+.answer .txt b{color:var(--accent);font-weight:500}
 .cur{display:inline-block;width:7px;height:14px;background:var(--accent);vertical-align:-2px;
   animation:blink 1.05s step-end infinite}
 @keyframes blink{50%{opacity:0}}
-.think{display:inline-flex;gap:5px;align-items:center;color:var(--ink-3);font-size:12.5px}
-.think b{width:5px;height:5px;border-radius:50%;background:var(--ink-3);display:block;
-  animation:pulse 1.3s ease-in-out infinite}
-.think b:nth-child(2){animation-delay:.18s} .think b:nth-child(3){animation-delay:.36s}
-@keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 
 /* ---------- code + terminal ---------- */
 .code{font-family:var(--mono);font-size:12.5px;line-height:1.85;background:#000;
   border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;margin-top:12px}
 .code .ln{display:block;white-space:pre;opacity:0}
-.code .fn{color:var(--ink-3)}
-.code .del{color:var(--red)} .code .add{color:var(--green)}
-.code .cm{color:var(--ink-3)}
+.code .fn{color:var(--blue)}
+.code .del{color:var(--red);background:rgba(239,122,122,.07);display:block}
+.code .add{color:var(--green);background:rgba(95,209,139,.07);display:block}
+.code .cm{color:var(--ink-3);font-style:italic}
+.code .kw{color:var(--accent)} .code .str{color:var(--amber)} .code .num{color:var(--blue)}
 .term{font-family:var(--mono);font-size:12.5px;line-height:1.9;background:#000;
   border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;margin-top:12px}
 .term .ln{display:block;white-space:pre;opacity:0}
@@ -140,10 +164,29 @@ footer a:hover{text-decoration:underline}
 
 <div id="prog"></div>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="claude-mark" viewBox="0 0 100 100">
+    <g fill="currentColor">
+      <rect x="46.5" y="2"  width="7" height="34" rx="3.5"/>
+      <rect x="46.5" y="64" width="7" height="34" rx="3.5"/>
+      <rect x="2"  y="46.5" width="34" height="7" rx="3.5"/>
+      <rect x="64" y="46.5" width="34" height="7" rx="3.5"/>
+      <rect x="46.5" y="7"  width="7" height="30" rx="3.5" transform="rotate(30 50 50)"/>
+      <rect x="46.5" y="63" width="7" height="30" rx="3.5" transform="rotate(30 50 50)"/>
+      <rect x="46.5" y="5"  width="7" height="32" rx="3.5" transform="rotate(60 50 50)"/>
+      <rect x="46.5" y="63" width="7" height="32" rx="3.5" transform="rotate(60 50 50)"/>
+      <rect x="46.5" y="5"  width="7" height="32" rx="3.5" transform="rotate(120 50 50)"/>
+      <rect x="46.5" y="63" width="7" height="32" rx="3.5" transform="rotate(120 50 50)"/>
+      <rect x="46.5" y="7"  width="7" height="30" rx="3.5" transform="rotate(150 50 50)"/>
+      <rect x="46.5" y="63" width="7" height="30" rx="3.5" transform="rotate(150 50 50)"/>
+    </g>
+  </symbol>
+</defs></svg>
+
 <div class="hero">
   <canvas id="dots" aria-hidden="true"></canvas>
   <div class="wrap">
-    <p class="eyebrow">Claude Code · common workflows</p>
+    <p class="eyebrow"><svg class="clogo"><use href="#claude-mark"/></svg> Claude Code · common workflows</p>
     <h1>Four things your engineers do <em>all day</em></h1>
     <p class="lede">Understand unfamiliar code. Fix a bug. Add a feature. Refactor safely.
       Each one below runs against FinTechCo's real payments service — and plays itself.</p>
@@ -163,14 +206,22 @@ footer a:hover{text-decoration:underline}
     <div class="shead"><span class="snum">01</span><h2>You inherited it on a Tuesday</h2></div>
     <p class="cap">No docs. The author left in November. Ask it what the code does.</p>
 
-    <div class="chat" data-scene="s1">
-      <div class="bar"><i></i>claude · ~/fintechco-payments</div>
-      <div class="msg you"><span class="who">You</span>
-        <div class="bubble" data-type="give me an overview — where does money actually move?"></div></div>
-      <div class="msg ai"><span class="who">Claude</span>
-        <div class="bubble" data-reply>
-          <div class="think" data-think><b></b><b></b><b></b> reading 5 files…</div>
-        </div></div>
+    <div class="cli" data-scene="s1">
+      <div class="chrome">
+        <span class="dot" style="background:#e0655a"></span>
+        <span class="dot" style="background:#e5b25d"></span>
+        <span class="dot" style="background:#7ba05b"></span>
+        <span class="path">~/fintechco-payments</span>
+      </div>
+      <div class="body">
+        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="give me an overview — where does money actually move?"></span></div>
+        <div class="status" data-status>
+          <svg class="clogo spin"><use href="#claude-mark"/></svg>
+          <span data-verb>Analyzing</span><span class="el" data-el>(0s · ↑ 0 tokens)</span>
+        </div>
+        <div data-tools></div>
+        <div class="answer" data-answer><span class="b">⏺</span><span class="txt"></span></div>
+      </div>
     </div>
 
     <div class="fig" data-fig="s1">
@@ -195,14 +246,22 @@ footer a:hover{text-decoration:underline}
     <div class="shead"><span class="snum">02</span><h2>Green tests. Books don't balance.</h2></div>
     <p class="cap">Every test passes. Finance still can't close the day.</p>
 
-    <div class="chat" data-scene="s2">
-      <div class="bar"><i></i>claude · fix the reconciliation</div>
-      <div class="msg you"><span class="who">You</span>
-        <div class="bubble" data-type="pytest passes but reconcile.py is off by $0.09. why?"></div></div>
-      <div class="msg ai"><span class="who">Claude</span>
-        <div class="bubble" data-reply>
-          <div class="think" data-think><b></b><b></b><b></b> comparing fee logic…</div>
-        </div></div>
+    <div class="cli" data-scene="s2">
+      <div class="chrome">
+        <span class="dot" style="background:#e0655a"></span>
+        <span class="dot" style="background:#e5b25d"></span>
+        <span class="dot" style="background:#7ba05b"></span>
+        <span class="path">~/fintechco-payments · fix reconciliation</span>
+      </div>
+      <div class="body">
+        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="pytest passes but reconcile.py is off by $0.09. why?"></span></div>
+        <div class="status" data-status>
+          <svg class="clogo spin"><use href="#claude-mark"/></svg>
+          <span data-verb>Analyzing</span><span class="el" data-el>(0s · ↑ 0 tokens)</span>
+        </div>
+        <div data-tools></div>
+        <div class="answer" data-answer><span class="b">⏺</span><span class="txt"></span></div>
+      </div>
     </div>
 
     <div class="fig" data-term="s2a" style="padding:0;border:0;background:none;margin-top:14px">
@@ -259,14 +318,22 @@ footer a:hover{text-decoration:underline}
     <div class="shead"><span class="snum">03</span><h2>The gap nobody has hit yet</h2></div>
     <p class="cap">The converter exists. The field exists. Nothing connects them.</p>
 
-    <div class="chat" data-scene="s3">
-      <div class="bar"><i></i>claude · multi-currency settlement</div>
-      <div class="msg you"><span class="who">You</span>
-        <div class="bubble" data-type="does settlement use fx.py? what happens on a EUR payment?"></div></div>
-      <div class="msg ai"><span class="who">Claude</span>
-        <div class="bubble" data-reply>
-          <div class="think" data-think><b></b><b></b><b></b> tracing currency…</div>
-        </div></div>
+    <div class="cli" data-scene="s3">
+      <div class="chrome">
+        <span class="dot" style="background:#e0655a"></span>
+        <span class="dot" style="background:#e5b25d"></span>
+        <span class="dot" style="background:#7ba05b"></span>
+        <span class="path">~/fintechco-payments · multi-currency</span>
+      </div>
+      <div class="body">
+        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="does settlement use fx.py? what happens on a EUR payment?"></span></div>
+        <div class="status" data-status>
+          <svg class="clogo spin"><use href="#claude-mark"/></svg>
+          <span data-verb>Analyzing</span><span class="el" data-el>(0s · ↑ 0 tokens)</span>
+        </div>
+        <div data-tools></div>
+        <div class="answer" data-answer><span class="b">⏺</span><span class="txt"></span></div>
+      </div>
     </div>
 
     <div class="fig" data-fig="s3">
@@ -296,14 +363,22 @@ footer a:hover{text-decoration:underline}
     <div class="shead"><span class="snum">04</span><h2>Pay down the note someone left you</h2></div>
     <p class="cap">Same behaviour. Fewer ways to get it wrong.</p>
 
-    <div class="chat" data-scene="s4">
-      <div class="bar"><i></i>claude · refactor settlement.py</div>
-      <div class="msg you"><span class="who">You</span>
-        <div class="bubble" data-type="clean this up to match CLAUDE.md — don't change behaviour"></div></div>
-      <div class="msg ai"><span class="who">Claude</span>
-        <div class="bubble" data-reply>
-          <div class="think" data-think><b></b><b></b><b></b> planning 4 steps…</div>
-        </div></div>
+    <div class="cli" data-scene="s4">
+      <div class="chrome">
+        <span class="dot" style="background:#e0655a"></span>
+        <span class="dot" style="background:#e5b25d"></span>
+        <span class="dot" style="background:#7ba05b"></span>
+        <span class="path">~/fintechco-payments · refactor</span>
+      </div>
+      <div class="body">
+        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="clean this up to match CLAUDE.md — don't change behaviour"></span></div>
+        <div class="status" data-status>
+          <svg class="clogo spin"><use href="#claude-mark"/></svg>
+          <span data-verb>Analyzing</span><span class="el" data-el>(0s · ↑ 0 tokens)</span>
+        </div>
+        <div data-tools></div>
+        <div class="answer" data-answer><span class="b">⏺</span><span class="txt"></span></div>
+      </div>
     </div>
 
     <div class="fig" data-code="s4b" style="padding:0;border:0;background:none;margin-top:14px">
@@ -384,7 +459,7 @@ if(!RM&&window.gsap){
   gsap.fromTo('.cue',{opacity:0},{opacity:1,duration:.9,delay:1.6});
   gsap.utils.toArray('.cap').forEach(n=>gsap.fromTo(n,{opacity:0,y:18},{opacity:1,y:0,duration:.7,
     ease:'power3.out',scrollTrigger:{trigger:n,start:'top 88%',once:true}}));
-  gsap.utils.toArray('.chat').forEach(n=>gsap.fromTo(n,{opacity:0,y:26,scale:.99},
+  gsap.utils.toArray('.cli').forEach(n=>gsap.fromTo(n,{opacity:0,y:26,scale:.99},
     {opacity:1,y:0,scale:1,duration:.8,ease:'power3.out',
      scrollTrigger:{trigger:n,start:'top 85%',once:true}}));
 }else{$('.cue').style.opacity=1;}
@@ -431,17 +506,77 @@ const REPLIES={
   s4:'Four steps, tests between each:\n\n1. Decimal end to end\n2. collapse the duplicated fee rate to one definition\n3. route currency through fx.to_usd\n4. replace the stale NOTE with what it does now\n\nreconcile.py stays the oracle — it must exit 0 at every step.',
 };
 
+/* the tool calls Claude Code would actually make — results measured from the repo */
+const TOOLS={
+  s1:[['Glob','app/**/*.py','Found 6 files'],
+      ['Read','app/settlement.py','Read 43 lines'],
+      ['Read','app/ledger.py','Read 44 lines'],
+      ['Read','CLAUDE.md','Read 6 lines']],
+  s2:[['Bash','python -m pytest -q','<span class="ok">8 passed</span>'],
+      ['Bash','python scripts/reconcile.py','<span class="bad">exit 1 · MISMATCH $-0.09</span>'],
+      ['Grep','PLATFORM_FEE_RATE','4 matches across 2 files'],
+      ['Read','app/fees.py','Read 17 lines']],
+  s3:[['Read','app/settlement.py','Read 43 lines'],
+      ['Grep','fx\\.|import fx','<span class="bad">0 matches in app/settlement.py</span>'],
+      ['Read','app/fx.py','Read 13 lines']],
+  s4:[['Read','CLAUDE.md','Read 6 lines'],
+      ['TodoWrite','4 items','4 steps planned'],
+      ['Edit','app/settlement.py','<span class="ok">+6</span> <span class="bad">−8</span>'],
+      ['Bash','pytest -q &amp;&amp; reconcile.py','<span class="ok">green · RECONCILED</span>']],
+};
+const VERBS={s1:'Exploring',s2:'Investigating',s3:'Tracing',s4:'Planning'};
+
+function runStatus(node,verb){
+  /* ticking elapsed + token counter, the way the CLI shows work in progress */
+  const el=node.querySelector('[data-el]'), vb=node.querySelector('[data-verb]');
+  vb.textContent=verb;
+  const t0=performance.now();let stop=false,tok=0;
+  (function tick(){
+    if(stop)return;
+    const s=(performance.now()-t0)/1000;
+    tok+=Math.round(40+Math.random()*90);
+    el.textContent=`(${s.toFixed(0)}s · ↑ ${tok>999?(tok/1000).toFixed(1)+'k':tok} tokens · esc to interrupt)`;
+    setTimeout(tick,180);
+  })();
+  return ()=>{stop=true;};
+}
+
 async function playScene(key){
-  const chat=document.querySelector(`[data-scene="${key}"]`);
-  if(chat){
-    const you=chat.querySelector('[data-type]');
-    await typeInto(you,you.dataset.type,28);
-    await sleep(320);
-    const reply=chat.querySelector('[data-reply]');
-    await sleep(900);                       /* let the thinking dots breathe */
-    reply.innerHTML='';
-    await typeInto(reply,REPLIES[key]||'',9);
-    await sleep(260);
+  const cli=document.querySelector(`[data-scene="${key}"]`);
+  if(cli){
+    const you=cli.querySelector('[data-type]');
+    await typeInto(you,you.dataset.type,26);
+    await sleep(300);
+
+    const status=cli.querySelector('[data-status]');
+    const halt=RM?()=>{}:runStatus(status,VERBS[key]||'Working');
+    if(!RM&&window.gsap) gsap.to(status,{opacity:1,duration:.3});
+    else status.style.opacity=1;
+    await sleep(700);
+
+    const host=cli.querySelector('[data-tools]');
+    for(const [fn,args,res] of (TOOLS[key]||[])){
+      const d=document.createElement('div');
+      d.className='tool';
+      d.innerHTML=`<div class="call"><span class="b">⏺</span>
+          <span><span class="fnname">${fn}</span>(<span class="args">${args}</span>)</span></div>
+        <div class="res">⎿&nbsp; ${res}</div>`;
+      host.appendChild(d);
+      if(!RM&&window.gsap) gsap.fromTo(d,{opacity:0,x:-6},{opacity:1,x:0,duration:.32,ease:'power2.out'});
+      else d.style.opacity=1;
+      await sleep(620);
+    }
+
+    halt();
+    if(!RM&&window.gsap) gsap.to(status,{opacity:0,duration:.25});
+    else status.style.opacity=0;
+    await sleep(220);
+
+    const ans=cli.querySelector('[data-answer]');
+    if(!RM&&window.gsap) gsap.to(ans,{opacity:1,duration:.3});
+    else ans.style.opacity=1;
+    await typeInto(ans.querySelector('.txt'),REPLIES[key]||'',9);
+    await sleep(300);
   }
   /* then whatever visual belongs to this scene, in document order */
   const rest=[...document.querySelectorAll(
