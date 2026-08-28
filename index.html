@@ -27,7 +27,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
   transform:scaleX(0);transform-origin:0 50%}
 
 /* ---------- hero ---------- */
-.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;
+.hero{min-height:92svh;display:flex;flex-direction:column;justify-content:center;
   position:relative;padding:70px 0 110px;overflow:hidden}
 #dots{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;
   opacity:0;transition:opacity 1.6s ease}
@@ -54,13 +54,13 @@ h1 em{font-style:italic;color:var(--accent)}
 @keyframes bob{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(7px);opacity:1}}
 
 /* ---------- scenes ---------- */
-.scene{padding:110px 0;border-top:1px solid var(--line);position:relative}
+.scene{padding:86px 0;border-top:1px solid var(--line);position:relative}
 .shead{display:flex;gap:20px;align-items:baseline;margin-bottom:8px}
 .snum{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.14em;
   padding-top:9px;flex:none}
 h2{font-family:var(--display);font-size:clamp(27px,4vw,42px);margin:0;font-weight:300;
   letter-spacing:-.02em;text-wrap:balance;max-width:18ch;visibility:hidden}
-.cap{font-size:16px;color:var(--ink-2);margin:0 0 34px 51px;max-width:52ch}
+.cap{font-size:16px;color:var(--ink-2);margin:0 0 26px 51px;max-width:52ch}
 @media(max-width:640px){.cap{margin-left:0}.shead{gap:13px}}
 
 /* ---------- claude mark ---------- */
@@ -146,7 +146,7 @@ h2{font-family:var(--display);font-size:clamp(27px,4vw,42px);margin:0;font-weigh
 .fig text{font-family:var(--mono)}
 .figcap{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-top:12px;letter-spacing:.03em}
 
-footer{padding:60px 0 80px;border-top:1px solid var(--line);font-family:var(--mono);
+footer{padding:48px 0 64px;border-top:1px solid var(--line);font-family:var(--mono);
   font-size:12px;color:var(--ink-3);line-height:1.9}
 footer a{color:var(--accent);text-decoration:none}
 footer a:hover{text-decoration:underline}
@@ -341,10 +341,6 @@ footer a:hover{text-decoration:underline}
       <div class="figcap" data-figcap style="opacity:0">Currency is read on every row — then dropped before the total.</div>
     </div>
 
-    <div class="fig" data-bars="s3b">
-      <svg viewBox="0 0 900 180" role="img" aria-label="A 100 euro payment booked at 100 dollars versus 108.42"></svg>
-      <div class="figcap" data-figcap style="opacity:0">A €100 payment, as booked today vs. converted correctly at 1.0842.</div>
-    </div>
 
     <div class="out" data-out="s3">
       <div class="stat"><div class="k"><i style="background:var(--amber)"></i>Today's data</div>
@@ -500,27 +496,24 @@ function sleep(ms){return new Promise(r=>setTimeout(r,RM?0:ms));}
 
 /* replies, written out rather than pasted */
 const REPLIES={
-  s1:'Five modules. A CSV loads into Payment records, then splits two ways —\na bank-facing settlement report and a double-entry ledger.\nreconcile.py compares them nightly.\n\nCLAUDE.md sets the house rules: Decimal never float, ROUND_HALF_UP\nat 2dp, a regression test per behaviour change, reconcile must exit 0.',
-  s2:'Two implementations of one rule.\n\nfees.py computes the 2.5% fee in float. ledger.py computes the same\nfee in Decimal with ROUND_HALF_UP. On half-cent boundaries they round\ndifferently — and it compounds across the batch.\n\nThis also contradicts CLAUDE.md, which the repo already states.',
-  s3:'No — it does not.\n\nsettlement_totals() sums float(p.amount) and never calls fx.to_usd.\nCurrency is read off every row, then discarded.\n\nA €100 payment is booked into the bank report as $100.\nAll 200 rows are USD today, so nothing fails.',
-  s4:'Four steps, tests between each:\n\n1. Decimal end to end\n2. collapse the duplicated fee rate to one definition\n3. route currency through fx.to_usd\n4. replace the stale NOTE with what it does now\n\nreconcile.py stays the oracle — it must exit 0 at every step.',
+  s1:'Five modules. A CSV loads into Payment records, then splits two ways —\na settlement report and a double-entry ledger. reconcile.py compares\nthem nightly.\n\nCLAUDE.md sets the rules: Decimal never float, ROUND_HALF_UP at 2dp,\na regression test per behaviour change.',
+  s2:'Two implementations of one rule.\n\nfees.py computes the 2.5% fee in float. ledger.py computes it in\nDecimal with ROUND_HALF_UP. On half-cent boundaries they disagree —\nand it compounds across the batch.\n\nThis also contradicts CLAUDE.md.',
+  s3:'No — it does not.\n\nsettlement_totals() sums float(p.amount) and never calls fx.to_usd.\nCurrency is read off every row, then discarded. A €100 payment is\nbooked as $100.\n\nAll 200 rows are USD today, so nothing fails.',
+  s4:'Four steps, tests between each:\n\n1. Decimal end to end\n2. collapse the duplicated fee rate to one definition\n3. route currency through fx.to_usd\n4. replace the stale NOTE\n\nreconcile.py stays the oracle — it must exit 0 at every step.',
 };
 
 /* the tool calls Claude Code would actually make — results measured from the repo */
 const TOOLS={
   s1:[['Glob','app/**/*.py','Found 6 files'],
       ['Read','app/settlement.py','Read 43 lines'],
-      ['Read','app/ledger.py','Read 44 lines'],
       ['Read','CLAUDE.md','Read 6 lines']],
   s2:[['Bash','python -m pytest -q','<span class="ok">8 passed</span>'],
       ['Bash','python scripts/reconcile.py','<span class="bad">exit 1 · MISMATCH $-0.09</span>'],
-      ['Grep','PLATFORM_FEE_RATE','4 matches across 2 files'],
-      ['Read','app/fees.py','Read 17 lines']],
+      ['Grep','PLATFORM_FEE_RATE','4 matches across 2 files']],
   s3:[['Read','app/settlement.py','Read 43 lines'],
       ['Grep','fx\\.|import fx','<span class="bad">0 matches in app/settlement.py</span>'],
       ['Read','app/fx.py','Read 13 lines']],
-  s4:[['Read','CLAUDE.md','Read 6 lines'],
-      ['TodoWrite','4 items','4 steps planned'],
+  s4:[['TodoWrite','4 items','4 steps planned'],
       ['Edit','app/settlement.py','<span class="ok">+6</span> <span class="bad">−8</span>'],
       ['Bash','pytest -q &amp;&amp; reconcile.py','<span class="ok">green · RECONCILED</span>']],
 };
@@ -580,11 +573,10 @@ async function playScene(key){
   }
   /* then whatever visual belongs to this scene, in document order */
   const rest=[...document.querySelectorAll(
-    `[data-term^="${key}"],[data-code^="${key}"],[data-fig="${key}"],[data-bars="${key}"],[data-out="${key}"]`)];
+    `[data-term^="${key}"],[data-code^="${key}"],[data-fig="${key}"],[data-out="${key}"]`)];
   for(const node of rest){
     if(node.hasAttribute('data-out')){countUp(node);await sleep(500);continue;}
     if(node.hasAttribute('data-fig')){drawFig(key,node);await sleep(650);continue;}
-    if(node.hasAttribute('data-bars')){drawBars(node);await sleep(650);continue;}
     await revealLines(node, node.hasAttribute('data-code')?.14:.16);
     await sleep(340);
   }
@@ -644,28 +636,6 @@ function drawFig(key,host){
   if(cap)gsap.to(cap,{opacity:1,duration:.5,delay:.9});
 }
 
-function drawBars(host){
-  const svg=host.querySelector('svg');svg.innerHTML='';
-  const cap=host.querySelector('[data-figcap]');
-  const rows=[['booked today',100,'var(--red)','$100.00'],
-              ['correct at 1.0842',108.42,'var(--green)','$108.42']];
-  const x0=190,w=620,max=120;
-  rows.forEach(([label,val,tone,txt],i)=>{
-    const y=32+i*68;
-    const l=el('text',{x:x0-16,y:y+22,'text-anchor':'end',fill:'var(--ink-2)','font-size':12});
-    l.textContent=label;svg.appendChild(l);
-    svg.appendChild(el('rect',{x:x0,y,width:w,height:34,rx:6,fill:'var(--surface-2)'}));
-    const bar=el('rect',{x:x0,y,width:0,height:34,rx:6,fill:tone,opacity:.75});
-    svg.appendChild(bar);
-    const v=el('text',{x:x0+10,y:y+22,fill:'var(--ink)','font-size':13,opacity:0});
-    v.textContent=txt;svg.appendChild(v);
-    if(RM||!window.gsap){bar.setAttribute('width',w*val/max);v.setAttribute('opacity',1);return;}
-    gsap.to(bar,{attr:{width:w*val/max},duration:1.1,delay:i*.22,ease:'power3.out'});
-    gsap.to(v,{opacity:1,duration:.4,delay:i*.22+.5});
-  });
-  if(RM||!window.gsap){if(cap)cap.style.opacity=1;return;}
-  if(cap)gsap.to(cap,{opacity:1,duration:.5,delay:1.2});
-}
 
 /* fire each scene once, when it arrives */
 ['s1','s2','s3','s4'].forEach((key,i)=>{
