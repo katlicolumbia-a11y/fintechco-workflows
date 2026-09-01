@@ -547,7 +547,7 @@ const PACE={
   fig :{start:'top 80%'},
   out :{start:'top 85%'},
 };
-const SECONDS_PER_WEIGHT=0.85;
+const SECONDS_PER_WEIGHT=0.7;
 
 /* Returns one group per visual block, each with its own steps. Every block
    gets its own ScrollTrigger so it reveals when IT reaches the screen —
@@ -694,22 +694,27 @@ function buildFig(key,host){
 ['s1','s2','s3','s4'].forEach(key=>{
   const groups=buildScene(key);
   if(RM||!window.ScrollTrigger){groups.forEach(g=>applyScene(g.steps,1));return;}
-  for(const g of groups){
-    /* each block starts playing once when it reaches the screen, then runs on
-       its own clock — slow enough that it is still revealing while you talk
-       over it, rather than finishing before you arrive */
+  /* Blocks play strictly in document order, one at a time. Reaching a block
+     only *arms* it; a queue then plays everything armed so far in sequence, so
+     a figure can never start while the code block above it is still typing. */
+  let armed=-1, playing=false, next=0;
+  function pump(){
+    if(playing||next>armed) return;
+    playing=true;
+    const g=groups[next++];
+    const o={p:0};
+    gsap.to(o,{p:1,duration:g.dur,ease:'none',
+      onUpdate:()=>applyScene(g.steps,o.p),
+      onComplete:()=>{applyScene(g.steps,1);playing=false;pump();}});
+  }
+  groups.forEach((g,i)=>{
     ScrollTrigger.create({
       trigger:g.el,
       start:g.start,
       once:true,
-      onEnter:()=>{
-        const o={p:0};
-        gsap.to(o,{p:1,duration:g.dur,ease:'none',
-          onUpdate:()=>applyScene(g.steps,o.p),
-          onComplete:()=>applyScene(g.steps,1)});
-      },
+      onEnter:()=>{ if(i>armed)armed=i; pump(); },
     });
-  }
+  });
 });
 
 /* ---------- hero dot field ---------- */
