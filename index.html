@@ -329,7 +329,7 @@ footer a:hover{text-decoration:underline}
         <span class="path">~/fintechco-payments · multi-currency</span>
       </div>
       <div class="body">
-        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="does settlement use fx.py? what happens on a EUR payment?"></span></div>
+        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="what would break that our tests wouldn't catch?"></span></div>
         <div class="status" data-status>
           <svg class="clogo spin"><use href="#claude-mark"/></svg>
           <span data-verb>Analyzing</span><span class="el" data-el>(0s · ↑ 0 tokens)</span>
@@ -370,7 +370,7 @@ footer a:hover{text-decoration:underline}
         <span class="path">~/fintechco-payments · refactor</span>
       </div>
       <div class="body">
-        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="clean this up to match CLAUDE.md — don't change behaviour"></span></div>
+        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="clean this up properly, one step at a time, keep the tests green."></span></div>
         <div class="status" data-status>
           <svg class="clogo spin"><use href="#claude-mark"/></svg>
           <span data-verb>Analyzing</span><span class="el" data-el>(0s · ↑ 0 tokens)</span>
@@ -513,7 +513,7 @@ function stepStatus(node,verb,w){
 const REPLIES={
   s1:'Five modules. A CSV loads into Payment records, then splits two ways —\na settlement report and a double-entry ledger. reconcile.py compares\nthem nightly.\n\nCLAUDE.md sets the rules: Decimal never float, ROUND_HALF_UP at 2dp,\na regression test per behaviour change.',
   s2:'Two implementations of one rule.\n\nfees.py computes the 2.5% fee in float. ledger.py computes it in\nDecimal with ROUND_HALF_UP. On half-cent boundaries they disagree —\nand it compounds across the batch.\n\nThis also contradicts CLAUDE.md.',
-  s3:'No — it does not.\n\nsettlement_totals() sums float(p.amount) and never calls fx.to_usd.\nCurrency is read off every row, then discarded. A €100 payment is\nbooked as $100.\n\nAll 200 rows are USD today, so nothing fails.',
+  s3:'One route your data has never taken.\n\nsettlement_totals() sums float(p.amount) and never calls fx.to_usd.\nCurrency is read off every row, then discarded. A €100 payment is\nbooked as $100.\n\nAll 200 rows are USD today, so every test passes.',
   s4:'Four steps, tests between each:\n\n1. Decimal end to end\n2. collapse the duplicated fee rate to one definition\n3. route currency through fx.to_usd\n4. replace the stale NOTE\n\nreconcile.py stays the oracle — it must exit 0 at every step.',
 };
 
@@ -547,6 +547,23 @@ const PACE={
   fig :{start:'top 80%'},
   out :{start:'top 85%'},
 };
+/* Seconds per block, measured from the walkthrough script: each block is given
+   the time it takes to say the sentences that accompany it, at 145 wpm.
+   Order matches the blocks down the page.
+      s1  CLI · figure · stats
+      s2  CLI · terminal(green+mismatch) · diff · terminal(fixed) · stats
+      s3  CLI · figure · stats
+      s4  CLI · diff · terminal(4 steps) · stats                            */
+const NARRATION={
+  s1:[10.8, 4.6, 5.8],
+  s2:[27.7, 17.4, 7.9, 8.7, 8.3],
+  s3:[11.6, 11.6, 9.9],
+  s4:[6.2,  8.7,  2.5, 2.5],
+};
+/* Scale everything at once if you speak faster or slower than 145 wpm.
+   0.8 ≈ 180 wpm · 1.0 = 145 wpm · 1.2 ≈ 120 wpm */
+const PACE_SCALE=1.0;
+/* fallback for any block the table does not cover */
 const SECONDS_PER_WEIGHT=0.7;
 
 /* Returns one group per visual block, each with its own steps. Every block
@@ -614,14 +631,15 @@ function buildScene(key){
     groups.push({el:node,steps,...PACE.code});
   }
 
-  /* normalise each group's weights into cumulative slices of 0..1,
-     and derive how long the group should take to play */
-  for(const g of groups){
+  /* normalise each group's weights into cumulative slices of 0..1, then give
+     the group the time the narration needs for it */
+  const budget=NARRATION[key]||[];
+  groups.forEach((g,i)=>{
     const total=g.steps.reduce((a,s)=>a+s.w,0)||1;
     let acc=0;
     for(const s of g.steps){s.a=acc/total;acc+=s.w;s.b=acc/total;}
-    g.dur=total*SECONDS_PER_WEIGHT;
-  }
+    g.dur=(budget[i]!=null?budget[i]:total*SECONDS_PER_WEIGHT)*PACE_SCALE;
+  });
   return groups;
 }
 
