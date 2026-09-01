@@ -669,9 +669,13 @@ function buildFig(key,host){
   if(RM||!window.ScrollTrigger){applyScene(steps,1);return;}
   ScrollTrigger.create({
     trigger:anchor,
-    start:'top 78%',
-    end:'bottom 68%',
-    scrub:0.45,
+    /* a longer span means the same steps are spread over more scrolling,
+       so each reveal takes more wheel to complete */
+    start:'top 90%',
+    end:'bottom 45%',
+    /* scrub as a number is a catch-up time in seconds: the reveal trails the
+       scrollbar and settles a beat after you stop, rather than tracking it exactly */
+    scrub:1.15,
     onUpdate:self=>applyScene(steps,self.progress),
     onRefresh:self=>applyScene(steps,self.progress),
   });
