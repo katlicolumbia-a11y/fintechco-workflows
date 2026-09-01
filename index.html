@@ -105,7 +105,10 @@ h2{font-family:var(--display);font-size:clamp(27px,4vw,42px);margin:0;font-weigh
 .answer .b{color:var(--accent);flex:none;padding-top:1px}
 .answer .txt{flex:1;min-width:0;white-space:pre-wrap;color:var(--ink);line-height:1.72}
 .answer .txt b{color:var(--accent);font-weight:500}
-.cur{display:inline-block;width:7px;height:14px;background:var(--accent);vertical-align:-2px;
+/* caret follows the scroll-driven typing, and only while mid-word */
+.inbox.typing .txt::after,
+.answer.typing .txt::after{content:"";display:inline-block;width:7px;height:14px;
+  background:var(--accent);vertical-align:-2px;margin-left:2px;
   animation:blink 1.05s step-end infinite}
 @keyframes blink{50%{opacity:0}}
 
@@ -460,39 +463,51 @@ if(!RM&&window.gsap){
      scrollTrigger:{trigger:n,start:'top 85%',once:true}}));
 }else{$('.cue').style.opacity=1;}
 
-/* ---------- scene player ---------- */
-function typeInto(node,text,speed){
-  return new Promise(res=>{
-    if(RM){node.textContent=text;res();return;}
-    node.innerHTML='<span class="t"></span><span class="cur"></span>';
-    const t=node.querySelector('.t');let i=0;
-    (function tick(){t.textContent=text.slice(0,++i);
-      if(i<text.length)setTimeout(tick,speed||26);
-      else{node.querySelector('.cur').remove();res();}})();
-  });
+/* ---------- scene player: every reveal is bound to scroll position ----------
+   Nothing runs on a timer. Each scene owns a stretch of scroll, that stretch is
+   divided into weighted steps, and a step only advances while you are moving
+   through its slice. Stop scrolling and the scene stops exactly where it is. */
+const clamp01=v=>v<0?0:v>1?1:v;
+const easeOut=p=>1-Math.pow(1-p,3);
+
+/* step builders — each returns {w, run(p)} where p is 0..1 within its own slice */
+function stepType(node,text){
+  return {w:Math.max(3,Math.min(9,text.length/34)),run(p){
+    const n=Math.round(clamp01(p)*text.length);
+    node.textContent=text.slice(0,n);
+    node.parentNode.classList.toggle('typing',p>0.001&&p<0.999);
+  }};
 }
-function revealLines(host,stagger){
-  return new Promise(res=>{
-    const lns=[...host.querySelectorAll('.ln')];
-    if(RM||!window.gsap){lns.forEach(l=>l.style.opacity=1);res();return;}
-    gsap.to(lns,{opacity:1,duration:.16,stagger:stagger||.13,ease:'none',onComplete:res});
-  });
+function stepShow(node,w){
+  return {w:w||1.4,run(p){node.style.opacity=clamp01(p*1.9);}};
 }
-function countUp(host){
-  host.querySelectorAll('.stat').forEach((s,i)=>{
-    if(RM||!window.gsap){s.style.opacity=1;
-      const v=s.querySelector('.v');if(v.dataset.to)v.textContent=(v.dataset.pre||'')+(+v.dataset.to).toFixed(+v.dataset.dp||0);
-      if(v.dataset.txt)v.textContent=v.dataset.txt;return;}
-    gsap.to(s,{opacity:1,duration:.5,delay:i*.09,ease:'power2.out'});
-    const v=s.querySelector('.v');
-    if(v.dataset.txt){gsap.delayedCall(i*.09+.15,()=>v.textContent=v.dataset.txt);return;}
-    const to=+v.dataset.to,dp=+v.dataset.dp||0,pre=v.dataset.pre||'';
-    const o={n:0};
-    gsap.to(o,{n:to,duration:1.1,delay:i*.09,ease:'power2.out',
-      onUpdate:()=>v.textContent=pre+o.n.toFixed(dp)});
-  });
+function stepHide(node,w){
+  return {w:w||0.6,run(p){node.style.opacity=1-clamp01(p*1.9);}};
 }
-function sleep(ms){return new Promise(r=>setTimeout(r,RM?0:ms));}
+function stepDraw(path,len){
+  return {w:0.8,run(p){path.style.strokeDashoffset=len*(1-clamp01(p));}};
+}
+function stepStat(stat){
+  const v=stat.querySelector('.v');
+  const to=v.dataset.to?+v.dataset.to:null, dp=+v.dataset.dp||0, pre=v.dataset.pre||'', txt=v.dataset.txt;
+  return {w:1.3,run(p){
+    const c=clamp01(p);
+    stat.style.opacity=clamp01(c*1.9);
+    if(txt){v.textContent=c>0.25?txt:'';return;}
+    if(to!==null)v.textContent=pre+(to*easeOut(c)).toFixed(dp);
+  }};
+}
+/* the CLI status line: verb, elapsed and token count all advance with scroll */
+function stepStatus(node,verb,w){
+  const elx=node.querySelector('[data-el]'), vb=node.querySelector('[data-verb]');
+  if(vb)vb.textContent=verb;
+  return {w:w||3,run(p){
+    const c=clamp01(p);
+    node.style.opacity=clamp01(c*4);
+    const secs=Math.round(c*11), tok=Math.round(c*2400);
+    if(elx)elx.textContent=`(${secs}s · ↑ ${tok>999?(tok/1000).toFixed(1)+'k':tok} tokens · esc to interrupt)`;
+  }};
+}
 
 /* replies, written out rather than pasted */
 const REPLIES={
@@ -519,71 +534,78 @@ const TOOLS={
 };
 const VERBS={s1:'Exploring',s2:'Investigating',s3:'Tracing',s4:'Planning'};
 
-function runStatus(node,verb){
-  /* ticking elapsed + token counter, the way the CLI shows work in progress */
-  const el=node.querySelector('[data-el]'), vb=node.querySelector('[data-verb]');
-  vb.textContent=verb;
-  const t0=performance.now();let stop=false,tok=0;
-  (function tick(){
-    if(stop)return;
-    const s=(performance.now()-t0)/1000;
-    tok+=Math.round(40+Math.random()*90);
-    el.textContent=`(${s.toFixed(0)}s · ↑ ${tok>999?(tok/1000).toFixed(1)+'k':tok} tokens · esc to interrupt)`;
-    setTimeout(tick,180);
-  })();
-  return ()=>{stop=true;};
-}
-
-async function playScene(key){
+/* Build every element up front, hidden, and return the ordered step list.
+   Nothing is created during scroll, so there are no layout jumps mid-reveal. */
+function buildScene(key){
+  const steps=[];
   const cli=document.querySelector(`[data-scene="${key}"]`);
+
   if(cli){
     const you=cli.querySelector('[data-type]');
-    await typeInto(you,you.dataset.type,26);
-    await sleep(300);
+    const promptText=you.dataset.type||'';
+    you.textContent='';
+    steps.push(stepType(you,promptText));
 
     const status=cli.querySelector('[data-status]');
-    const halt=RM?()=>{}:runStatus(status,VERBS[key]||'Working');
-    if(!RM&&window.gsap) gsap.to(status,{opacity:1,duration:.3});
-    else status.style.opacity=1;
-    await sleep(700);
+    steps.push(stepStatus(status,VERBS[key]||'Working'));
 
+    /* tool calls: created now, revealed later */
     const host=cli.querySelector('[data-tools]');
+    host.innerHTML='';
     for(const [fn,args,res] of (TOOLS[key]||[])){
       const d=document.createElement('div');
-      d.className='tool';
+      d.className='tool';d.style.opacity='0';
       d.innerHTML=`<div class="call"><span class="b">⏺</span>
           <span><span class="fnname">${fn}</span>(<span class="args">${args}</span>)</span></div>
         <div class="res">⎿&nbsp; ${res}</div>`;
       host.appendChild(d);
-      if(!RM&&window.gsap) gsap.fromTo(d,{opacity:0,x:-6},{opacity:1,x:0,duration:.32,ease:'power2.out'});
-      else d.style.opacity=1;
-      await sleep(620);
+      steps.push(stepShow(d,2));
     }
 
-    halt();
-    if(!RM&&window.gsap) gsap.to(status,{opacity:0,duration:.25});
-    else status.style.opacity=0;
-    await sleep(220);
+    steps.push(stepHide(status));
 
     const ans=cli.querySelector('[data-answer]');
-    if(!RM&&window.gsap) gsap.to(ans,{opacity:1,duration:.3});
-    else ans.style.opacity=1;
-    await typeInto(ans.querySelector('.txt'),REPLIES[key]||'',9);
-    await sleep(300);
+    const txt=ans.querySelector('.txt');
+    txt.textContent='';
+    steps.push(stepShow(ans,0.5));
+    steps.push(stepType(txt,REPLIES[key]||''));
   }
-  /* then whatever visual belongs to this scene, in document order */
+
+  /* then the visuals belonging to this scene, in document order */
   const rest=[...document.querySelectorAll(
     `[data-term^="${key}"],[data-code^="${key}"],[data-fig="${key}"],[data-out="${key}"]`)];
   for(const node of rest){
-    if(node.hasAttribute('data-out')){countUp(node);await sleep(500);continue;}
-    if(node.hasAttribute('data-fig')){drawFig(key,node);await sleep(650);continue;}
-    await revealLines(node, node.hasAttribute('data-code')?.14:.16);
-    await sleep(340);
+    if(node.hasAttribute('data-out')){
+      node.querySelectorAll('.stat').forEach(s=>{s.style.opacity='0';steps.push(stepStat(s));});
+      continue;
+    }
+    if(node.hasAttribute('data-fig')){
+      const {nodes,arrows,cap}=buildFig(key,node);
+      nodes.forEach(n=>steps.push({w:0.7,run(p){n.setAttribute('opacity',clamp01(p*1.9));}}));
+      arrows.forEach(a=>steps.push(a.len?stepDraw(a.el,a.len)
+        :{w:0.7,run(p){a.el.setAttribute('opacity',clamp01(p*1.9));}}));
+      if(cap)steps.push(stepShow(cap,0.8));
+      continue;
+    }
+    node.querySelectorAll('.ln').forEach(l=>{l.style.opacity='0';steps.push(stepShow(l,0.75));});
+  }
+
+  /* normalise the weights into cumulative slices of 0..1 */
+  const total=steps.reduce((a,s)=>a+s.w,0)||1;
+  let acc=0;
+  for(const s of steps){s.a=acc/total;acc+=s.w;s.b=acc/total;}
+  return steps;
+}
+
+function applyScene(steps,p){
+  for(const s of steps){
+    const local=(p-s.a)/(s.b-s.a);
+    s.run(local<0?0:local>1?1:local);
   }
 }
 
 /* ---------- figures ---------- */
-function drawFig(key,host){
+function buildFig(key,host){
   const svg=host.querySelector('svg');svg.innerHTML='';
   const cap=host.querySelector('[data-figcap]');
   const box=(x,y,w,h,label,sub,tone)=>{
@@ -626,22 +648,33 @@ function drawFig(key,host){
     const x=el('text',{x:689,y:150,'text-anchor':'middle',fill:'var(--red)','font-size':20,opacity:0});
     x.textContent='✕';svg.appendChild(x);nodes.push(x);
   }
-  if(RM||!window.gsap){nodes.forEach(n=>n.setAttribute('opacity',1));if(cap)cap.style.opacity=1;return;}
-  arrows.forEach(a=>{const L=a.getTotalLength();
-    a.style.strokeDasharray=a.getAttribute('stroke-dasharray')||L;
-    if(!a.getAttribute('stroke-dasharray'))a.style.strokeDashoffset=L;});
-  gsap.to(nodes,{opacity:1,duration:.45,stagger:.14,ease:'power2.out'});
-  arrows.forEach((a,i)=>{if(a.getAttribute('stroke-dasharray'))return;
-    gsap.to(a,{strokeDashoffset:0,duration:.5,delay:.28+i*.14,ease:'power2.inOut'});});
-  if(cap)gsap.to(cap,{opacity:1,duration:.5,delay:.9});
+  /* hand back the pieces, hidden — the scroll driver reveals them */
+  const out={nodes,cap,arrows:arrows.map(a=>{
+    if(a.getAttribute('stroke-dasharray')){a.setAttribute('opacity',0);return {el:a,len:0};}
+    const L=a.getTotalLength();
+    a.style.strokeDasharray=L;a.style.strokeDashoffset=L;
+    return {el:a,len:L};
+  })};
+  nodes.forEach(n=>n.setAttribute('opacity',0));
+  if(cap)cap.style.opacity='0';
+  return out;
 }
 
 
-/* fire each scene once, when it arrives */
+/* Bind each scene to its own stretch of scroll.
+   scrub means progress follows the scrollbar: stop moving and the scene holds. */
 ['s1','s2','s3','s4'].forEach((key,i)=>{
   const anchor=document.querySelector(`#w${i+1}`);
-  if(RM||!window.ScrollTrigger){playScene(key);return;}
-  ScrollTrigger.create({trigger:anchor,start:'top 62%',once:true,onEnter:()=>playScene(key)});
+  const steps=buildScene(key);
+  if(RM||!window.ScrollTrigger){applyScene(steps,1);return;}
+  ScrollTrigger.create({
+    trigger:anchor,
+    start:'top 78%',
+    end:'bottom 68%',
+    scrub:0.45,
+    onUpdate:self=>applyScene(steps,self.progress),
+    onRefresh:self=>applyScene(steps,self.progress),
+  });
 });
 
 /* ---------- hero dot field ---------- */
