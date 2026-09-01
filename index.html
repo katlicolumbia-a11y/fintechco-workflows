@@ -536,6 +536,19 @@ const VERBS={s1:'Exploring',s2:'Investigating',s3:'Tracing',s4:'Planning'};
 
 /* Build every element up front, hidden, and return the ordered step list.
    Nothing is created during scroll, so there are no layout jumps mid-reveal. */
+/* Pacing, in one place so it is easy to retune.
+   start = where the block sits on screen when its reveal begins
+   end   = where it sits when the reveal completes
+   scrub = catch-up time in seconds; higher means the reveal trails further
+           behind the scrollbar and settles later after you stop */
+const PACE={
+  cli :{start:'top 55%', end:'bottom 8%'},   /* begins once the box is mid-screen */
+  code:{start:'top 62%', end:'top 8%'},
+  fig :{start:'top 62%', end:'top 6%'},
+  out :{start:'top 72%', end:'top 22%'},
+  scrub:2.0,
+};
+
 /* Returns one group per visual block, each with its own steps. Every block
    gets its own ScrollTrigger so it reveals when IT reaches the screen —
    not when the section it happens to sit in does. */
@@ -575,7 +588,7 @@ function buildScene(key){
     steps.push(stepType(txt,REPLIES[key]||''));
 
     /* the whole conversation is one group, anchored to the CLI box */
-    groups.push({el:cli,steps,start:'top 88%',end:'bottom 45%'});
+    groups.push({el:cli,steps,...PACE.cli});
   }
 
   /* each visual below the CLI becomes its own group, anchored to itself */
@@ -585,7 +598,7 @@ function buildScene(key){
     steps=[];
     if(node.hasAttribute('data-out')){
       node.querySelectorAll('.stat').forEach(s=>{s.style.opacity='0';steps.push(stepStat(s));});
-      groups.push({el:node,steps,start:'top 92%',end:'top 52%'});
+      groups.push({el:node,steps,...PACE.out});
       continue;
     }
     if(node.hasAttribute('data-fig')){
@@ -594,11 +607,11 @@ function buildScene(key){
       arrows.forEach(a=>steps.push(a.len?stepDraw(a.el,a.len)
         :{w:0.7,run(p){a.el.setAttribute('opacity',clamp01(p*1.9));}}));
       if(cap)steps.push(stepShow(cap,0.8));
-      groups.push({el:node,steps,start:'top 88%',end:'top 38%'});
+      groups.push({el:node,steps,...PACE.fig});
       continue;
     }
     node.querySelectorAll('.ln').forEach(l=>{l.style.opacity='0';steps.push(stepShow(l,0.75));});
-    groups.push({el:node,steps,start:'top 88%',end:'top 42%'});
+    groups.push({el:node,steps,...PACE.code});
   }
 
   /* normalise each group's weights into cumulative slices of 0..1 */
@@ -686,7 +699,7 @@ function buildFig(key,host){
       end:g.end,
       /* scrub as a number is a catch-up time in seconds: the reveal trails the
          scrollbar and settles a beat after you stop, rather than tracking it exactly */
-      scrub:1.15,
+      scrub:PACE.scrub,
       onUpdate:self=>applyScene(g.steps,self.progress),
       onRefresh:self=>applyScene(g.steps,self.progress),
     });
