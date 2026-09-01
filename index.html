@@ -537,17 +537,17 @@ const VERBS={s1:'Exploring',s2:'Investigating',s3:'Tracing',s4:'Planning'};
 /* Build every element up front, hidden, and return the ordered step list.
    Nothing is created during scroll, so there are no layout jumps mid-reveal. */
 /* Pacing, in one place so it is easy to retune.
-   start = where the block sits on screen when its reveal begins
-   end   = where it sits when the reveal completes
-   scrub = catch-up time in seconds; higher means the reveal trails further
-           behind the scrollbar and settles later after you stop */
+   start = where the block sits on screen when its reveal starts playing
+   SECONDS_PER_WEIGHT = how long one unit of step weight takes. Every group's
+   duration is its total weight times this, so a long reply gets proportionally
+   more time than a three-line terminal block and nothing feels rushed. */
 const PACE={
-  cli :{start:'top 55%', end:'bottom 8%'},   /* begins once the box is mid-screen */
-  code:{start:'top 62%', end:'top 8%'},
-  fig :{start:'top 62%', end:'top 6%'},
-  out :{start:'top 72%', end:'top 22%'},
-  scrub:2.0,
+  cli :{start:'top 75%'},
+  code:{start:'top 80%'},
+  fig :{start:'top 80%'},
+  out :{start:'top 85%'},
 };
+const SECONDS_PER_WEIGHT=0.85;
 
 /* Returns one group per visual block, each with its own steps. Every block
    gets its own ScrollTrigger so it reveals when IT reaches the screen —
@@ -614,11 +614,13 @@ function buildScene(key){
     groups.push({el:node,steps,...PACE.code});
   }
 
-  /* normalise each group's weights into cumulative slices of 0..1 */
+  /* normalise each group's weights into cumulative slices of 0..1,
+     and derive how long the group should take to play */
   for(const g of groups){
     const total=g.steps.reduce((a,s)=>a+s.w,0)||1;
     let acc=0;
     for(const s of g.steps){s.a=acc/total;acc+=s.w;s.b=acc/total;}
+    g.dur=total*SECONDS_PER_WEIGHT;
   }
   return groups;
 }
@@ -693,15 +695,19 @@ function buildFig(key,host){
   const groups=buildScene(key);
   if(RM||!window.ScrollTrigger){groups.forEach(g=>applyScene(g.steps,1));return;}
   for(const g of groups){
+    /* each block starts playing once when it reaches the screen, then runs on
+       its own clock — slow enough that it is still revealing while you talk
+       over it, rather than finishing before you arrive */
     ScrollTrigger.create({
       trigger:g.el,
       start:g.start,
-      end:g.end,
-      /* scrub as a number is a catch-up time in seconds: the reveal trails the
-         scrollbar and settles a beat after you stop, rather than tracking it exactly */
-      scrub:PACE.scrub,
-      onUpdate:self=>applyScene(g.steps,self.progress),
-      onRefresh:self=>applyScene(g.steps,self.progress),
+      once:true,
+      onEnter:()=>{
+        const o={p:0};
+        gsap.to(o,{p:1,duration:g.dur,ease:'none',
+          onUpdate:()=>applyScene(g.steps,o.p),
+          onComplete:()=>applyScene(g.steps,1)});
+      },
     });
   }
 });
