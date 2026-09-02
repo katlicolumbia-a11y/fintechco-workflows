@@ -329,7 +329,7 @@ footer a:hover{text-decoration:underline}
         <span class="path">~/fintechco-payments · multi-currency</span>
       </div>
       <div class="body">
-        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="what would break that our tests wouldn't catch?"></span></div>
+        <div class="inbox"><span class="car">&gt;</span><span class="txt" data-type="does settlement use fx.py? what happens on a EUR payment?"></span></div>
         <div class="status" data-status>
           <svg class="clogo spin"><use href="#claude-mark"/></svg>
           <span data-verb>Analyzing</span><span class="el" data-el>(0s · ↑ 0 tokens)</span>
@@ -513,7 +513,7 @@ function stepStatus(node,verb,w){
 const REPLIES={
   s1:'Five modules. A CSV loads into Payment records, then splits two ways —\na settlement report and a double-entry ledger. reconcile.py compares\nthem nightly.\n\nCLAUDE.md sets the rules: Decimal never float, ROUND_HALF_UP at 2dp,\na regression test per behaviour change.',
   s2:'Two implementations of one rule.\n\nfees.py computes the 2.5% fee in float. ledger.py computes it in\nDecimal with ROUND_HALF_UP. On half-cent boundaries they disagree —\nand it compounds across the batch.\n\nThis also contradicts CLAUDE.md.',
-  s3:'One route your data has never taken.\n\nsettlement_totals() sums float(p.amount) and never calls fx.to_usd.\nCurrency is read off every row, then discarded. A €100 payment is\nbooked as $100.\n\nAll 200 rows are USD today, so every test passes.',
+  s3:'No — it does not.\n\nsettlement_totals() sums float(p.amount) and never calls fx.to_usd.\nCurrency is read off every row, then discarded. A €100 payment is\nbooked as $100.\n\nAll 200 rows are USD today, so nothing fails.',
   s4:'Four steps, tests between each:\n\n1. Decimal end to end\n2. collapse the duplicated fee rate to one definition\n3. route currency through fx.to_usd\n4. replace the stale NOTE\n\nreconcile.py stays the oracle — it must exit 0 at every step.',
 };
 
@@ -541,29 +541,24 @@ const VERBS={s1:'Exploring',s2:'Investigating',s3:'Tracing',s4:'Planning'};
    SECONDS_PER_WEIGHT = how long one unit of step weight takes. Every group's
    duration is its total weight times this, so a long reply gets proportionally
    more time than a three-line terminal block and nothing feels rushed. */
-const PACE={
-  cli :{start:'top 75%'},
-  code:{start:'top 80%'},
-  fig :{start:'top 80%'},
-  out :{start:'top 85%'},
+/* Cue sheet, measured from the walkthrough script at 145 wpm.
+   [phase, startSeconds, durationSeconds] — start is measured from the moment
+   the section comes into view, i.e. from when you begin narrating it. The gap
+   before 'prompt' is the setup line you say over a still screen; the prompt
+   then types while you read it aloud, the tool calls run while you say Claude
+   is reading the code, and so on. Phases are in page order. */
+const TIMELINE={
+  s1:[['prompt',10.3,6.6],['work',17.0,6.6],['answer',23.6,10.3],['fig',33.9,8.3],['out',42.2,8.3]],
+  s2:[['prompt',16.1,8.3],['work',24.4,8.3],['answer',32.7,19.4],['term1',52.1,12.4],
+      ['code',64.6,8.3],['term2',72.8,8.7],['out',81.5,4.6]],
+  s3:[['prompt',5.0,17.8],['work',22.8,7.9],['answer',30.6,17.0],['fig',47.6,8.7],['out',56.3,5.0]],
+  s4:[['prompt',5.4,6.2],['work',11.6,7.0],['answer',18.6,5.4],['code',24.0,1.8],
+      ['term',25.8,3.3],['out',29.1,3.3]],
 };
-/* Seconds per block, measured from the walkthrough script: each block is given
-   the time it takes to say the sentences that accompany it, at 145 wpm.
-   Order matches the blocks down the page.
-      s1  CLI · figure · stats
-      s2  CLI · terminal(green+mismatch) · diff · terminal(fixed) · stats
-      s3  CLI · figure · stats
-      s4  CLI · diff · terminal(4 steps) · stats                            */
-const NARRATION={
-  s1:[10.8, 4.6, 5.8],
-  s2:[27.7, 17.4, 7.9, 8.7, 8.3],
-  s3:[11.6, 11.6, 9.9],
-  s4:[6.2,  8.7,  2.5, 2.5],
-};
-/* Scale everything at once if you speak faster or slower than 145 wpm.
+/* Scale the whole cue sheet if you speak faster or slower than 145 wpm.
    0.8 ≈ 180 wpm · 1.0 = 145 wpm · 1.2 ≈ 120 wpm */
 const PACE_SCALE=1.0;
-/* fallback for any block the table does not cover */
+/* fallback for any phase the cue sheet does not cover */
 const SECONDS_PER_WEIGHT=0.7;
 
 /* Returns one group per visual block, each with its own steps. Every block
@@ -575,17 +570,16 @@ function buildScene(key){
   const cli=document.querySelector(`[data-scene="${key}"]`);
 
   if(cli){
+    /* phase 1 — the prompt, typed while you read it aloud */
     const you=cli.querySelector('[data-type]');
-    const promptText=you.dataset.type||'';
     you.textContent='';
-    steps.push(stepType(you,promptText));
+    groups.push({steps:[stepType(you,you.dataset.type||'')]});
 
+    /* phase 2 — status line and tool calls, while you say Claude is reading */
     const status=cli.querySelector('[data-status]');
-    steps.push(stepStatus(status,VERBS[key]||'Working'));
-
-    /* tool calls: created now, revealed later */
     const host=cli.querySelector('[data-tools]');
     host.innerHTML='';
+    steps=[stepStatus(status,VERBS[key]||'Working')];
     for(const [fn,args,res] of (TOOLS[key]||[])){
       const d=document.createElement('div');
       d.className='tool';d.style.opacity='0';
@@ -595,50 +589,44 @@ function buildScene(key){
       host.appendChild(d);
       steps.push(stepShow(d,2));
     }
-
     steps.push(stepHide(status));
+    groups.push({steps});
 
+    /* phase 3 — the answer, while you say what it found */
     const ans=cli.querySelector('[data-answer]');
     const txt=ans.querySelector('.txt');
     txt.textContent='';
-    steps.push(stepShow(ans,0.5));
-    steps.push(stepType(txt,REPLIES[key]||''));
-
-    /* the whole conversation is one group, anchored to the CLI box */
-    groups.push({el:cli,steps,...PACE.cli});
+    groups.push({steps:[stepShow(ans,0.5),stepType(txt,REPLIES[key]||'')]});
   }
 
-  /* each visual below the CLI becomes its own group, anchored to itself */
+  /* each visual below the CLI is its own phase, in page order */
   const rest=[...document.querySelectorAll(
     `[data-term^="${key}"],[data-code^="${key}"],[data-fig="${key}"],[data-out="${key}"]`)];
   for(const node of rest){
     steps=[];
     if(node.hasAttribute('data-out')){
       node.querySelectorAll('.stat').forEach(s=>{s.style.opacity='0';steps.push(stepStat(s));});
-      groups.push({el:node,steps,...PACE.out});
-      continue;
-    }
-    if(node.hasAttribute('data-fig')){
+    }else if(node.hasAttribute('data-fig')){
       const {nodes,arrows,cap}=buildFig(key,node);
       nodes.forEach(n=>steps.push({w:0.7,run(p){n.setAttribute('opacity',clamp01(p*1.9));}}));
       arrows.forEach(a=>steps.push(a.len?stepDraw(a.el,a.len)
         :{w:0.7,run(p){a.el.setAttribute('opacity',clamp01(p*1.9));}}));
       if(cap)steps.push(stepShow(cap,0.8));
-      groups.push({el:node,steps,...PACE.fig});
-      continue;
+    }else{
+      node.querySelectorAll('.ln').forEach(l=>{l.style.opacity='0';steps.push(stepShow(l,0.75));});
     }
-    node.querySelectorAll('.ln').forEach(l=>{l.style.opacity='0';steps.push(stepShow(l,0.75));});
-    groups.push({el:node,steps,...PACE.code});
+    groups.push({steps});
   }
 
-  /* normalise each group's weights into cumulative slices of 0..1, then give
-     the group the time the narration needs for it */
-  const budget=NARRATION[key]||[];
+  /* normalise each phase's step weights, then read its cue off the sheet */
+  const cues=TIMELINE[key]||[];
   groups.forEach((g,i)=>{
     const total=g.steps.reduce((a,s)=>a+s.w,0)||1;
     let acc=0;
     for(const s of g.steps){s.a=acc/total;acc+=s.w;s.b=acc/total;}
-    g.dur=(budget[i]!=null?budget[i]:total*SECONDS_PER_WEIGHT)*PACE_SCALE;
+    const cue=cues[i];
+    g.at =(cue?cue[1]:i*3)*PACE_SCALE;
+    g.dur=(cue?cue[2]:total*SECONDS_PER_WEIGHT)*PACE_SCALE;
   });
   return groups;
 }
@@ -709,29 +697,24 @@ function buildFig(key,host){
 
 /* Bind each scene to its own stretch of scroll.
    scrub means progress follows the scrollbar: stop moving and the scene holds. */
-['s1','s2','s3','s4'].forEach(key=>{
+['s1','s2','s3','s4'].forEach((key,i)=>{
   const groups=buildScene(key);
   if(RM||!window.ScrollTrigger){groups.forEach(g=>applyScene(g.steps,1));return;}
-  /* Blocks play strictly in document order, one at a time. Reaching a block
-     only *arms* it; a queue then plays everything armed so far in sequence, so
-     a figure can never start while the code block above it is still typing. */
-  let armed=-1, playing=false, next=0;
-  function pump(){
-    if(playing||next>armed) return;
-    playing=true;
-    const g=groups[next++];
+  /* One timeline per section, started when the section comes into view — i.e.
+     when you begin narrating it. Each phase sits at its cued offset, so the
+     gaps between reveals are the sentences you are saying in between. */
+  const tl=gsap.timeline({paused:true});
+  for(const g of groups){
     const o={p:0};
-    gsap.to(o,{p:1,duration:g.dur,ease:'none',
+    tl.to(o,{p:1,duration:g.dur,ease:'none',
       onUpdate:()=>applyScene(g.steps,o.p),
-      onComplete:()=>{applyScene(g.steps,1);playing=false;pump();}});
+      onComplete:()=>applyScene(g.steps,1)}, g.at);
   }
-  groups.forEach((g,i)=>{
-    ScrollTrigger.create({
-      trigger:g.el,
-      start:g.start,
-      once:true,
-      onEnter:()=>{ if(i>armed)armed=i; pump(); },
-    });
+  ScrollTrigger.create({
+    trigger:`#w${i+1}`,
+    start:'top 70%',
+    once:true,
+    onEnter:()=>tl.play(),
   });
 });
 
