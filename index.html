@@ -554,14 +554,14 @@ const TIMELINE={
   /* 40s — setup line 10.3s + "So you type, in plain English:" 2.5s + a beat,
      so typing starts only once you are actually saying the question */
   s1:[['prompt',14.3,6.6],['work',20.9,4.6],['answer',25.5, 7.2],['fig',32.7,5.8],['out',38.5,5.8]],
-  /* 75s — already had the longest wait; left alone */
-  s2:[['prompt',12.8,8.3],['work',21.1,4.1],['answer',25.2,13.8],['term1',39.0,15.9],
-      ['code',54.9,6.6],['term2',61.5,6.6],['out',68.1,1.6]],
-  /* 45s — the Europe framing runs its full 19.0s first */
-  s3:[['prompt',19.0,5.4],['work',24.4,4.3],['answer',28.7, 7.1],['fig',35.7,6.3],['out',42.1,4.3]],
-  /* 30s — setup line runs its full 5.4s */
-  s4:[['prompt', 5.4,6.2],['work',11.6,4.9],['answer',16.5, 3.7],['code',20.2,1.6],
-      ['term',21.8,2.3],['out',24.1,2.3]],
+  /* 75s + 10s hold before the prompt — section now runs to 79.7s */
+  s2:[['prompt',22.8,8.3],['work',31.1,4.1],['answer',35.2,13.8],['term1',49.0,15.9],
+      ['code',64.9,6.6],['term2',71.5,6.6],['out',78.1,1.6]],
+  /* 45s + 10s hold before the prompt — section now runs to 56.4s */
+  s3:[['prompt',29.0,5.4],['work',34.4,4.3],['answer',38.7, 7.1],['fig',45.7,6.3],['out',52.1,4.3]],
+  /* 30s + 10s hold before the prompt — section now runs to 36.4s */
+  s4:[['prompt',15.4,6.2],['work',21.6,4.9],['answer',26.5, 3.7],['code',30.2,1.6],
+      ['term',31.8,2.3],['out',34.1,2.3]],
 };
 /* Scale the whole cue sheet if you speak faster or slower than 145 wpm.
    0.8 ≈ 180 wpm · 1.0 = 145 wpm · 1.2 ≈ 120 wpm */
