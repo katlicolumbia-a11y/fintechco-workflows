@@ -546,18 +546,21 @@ const VERBS={s1:'Exploring',s2:'Investigating',s3:'Tracing',s4:'Planning'};
    the section comes into view, i.e. from when you begin narrating it. The gap
    before 'prompt' is the setup line you say over a still screen; the prompt
    then types while you read it aloud, the tool calls run while you say Claude
-   is reading the code, and so on. Phases are in page order. */
+   is reading the code, and so on. Phases are in page order.
+   The prompt phase is deliberately NOT compressed to fit the budget — it runs
+   at a natural 145 wpm so the question types at the speed you read it aloud.
+   Everything after it absorbs the squeeze instead. */
 const TIMELINE={
-  /* 40s — implied 198 wpm */
-  s1:[['prompt', 7.6,4.8],['work',12.4,4.8],['answer',17.3, 7.6],['fig',24.8,6.1],['out',30.9,6.1]],
-  /* 75s — implied 170 wpm, the closest to a natural pace */
-  s2:[['prompt',13.0,7.0],['work',20.1,4.2],['answer',24.3,14.1],['term1',38.4,16.2],
-      ['code',54.6,6.7],['term2',61.3,6.7],['out',68.0,1.6]],
-  /* 45s — implied 227 wpm, the tightest of the four */
-  s3:[['prompt',12.2,3.4],['work',15.6,4.5],['answer',20.1, 7.4],['fig',27.5,6.6],['out',34.1,4.5]],
-  /* 30s — implied 196 wpm */
-  s4:[['prompt', 4.0,4.6],['work', 8.6,5.2],['answer',13.8, 4.0],['code',17.8,1.6],
-      ['term',19.4,2.4],['out',21.8,2.4]],
+  /* 40s — prompt 6.6s, rest x0.70 */
+  s1:[['prompt', 7.2,6.6],['work',13.8,4.6],['answer',18.4, 7.2],['fig',25.6,5.8],['out',31.4,5.8]],
+  /* 75s — prompt 8.3s, rest x0.84 */
+  s2:[['prompt',12.8,8.3],['work',21.1,4.1],['answer',25.2,13.8],['term1',39.0,15.9],
+      ['code',54.9,6.6],['term2',61.5,6.6],['out',68.1,1.6]],
+  /* 45s — prompt 5.4s, rest x0.61 */
+  s3:[['prompt',11.6,5.4],['work',17.0,4.3],['answer',21.3, 7.1],['fig',28.3,6.3],['out',34.7,4.3]],
+  /* 30s — prompt 6.2s, rest x0.69 */
+  s4:[['prompt', 3.7,6.2],['work', 9.9,4.9],['answer',14.8, 3.7],['code',18.5,1.6],
+      ['term',20.1,2.3],['out',22.4,2.3]],
 };
 /* Scale the whole cue sheet if you speak faster or slower than 145 wpm.
    0.8 ≈ 180 wpm · 1.0 = 145 wpm · 1.2 ≈ 120 wpm */
